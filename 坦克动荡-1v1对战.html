@@ -1039,6 +1039,11 @@
   var REVERSE_MUL = 0.68;            // 倒车速度倍率（坦克倒着开更慢）
   var BOUNCE_MAX = 2;                // 子弹最多反弹次数
   var SPREAD_ARC = 0.15;             // 散射时相邻两发的夹角（弧度）≈ 8.6°
+  // ---- 坦克外观 ----
+  // 炮管长度（× 坦克半径 R），从炮塔中心往车头方向量。纯美术，不改弹道：
+  // 子弹出生点仍是 t.r + BULLET_R（见 fire），远短于炮口，而子弹是在坦克之前
+  // 绘制的（见 draw），所以子弹会被炮管盖住，看起来就是从炮口里飞出来的。
+  var BARREL_LEN = 1.30;             // 老值 1.06（2026-10-17 玩家要求炮管长一点）
   // ---- AI 瞄准手感 ----
   // 老做法：每隔 reactMs 抽一个「瞄准角偏差」，这一整段时间内偏差固定不变。
   //   后果 = 只要这次抽偏了，这段时间里每一发都偏；抽正了，每一发都中
@@ -3122,13 +3127,14 @@
     ctx.save();
     ctx.rotate(t.angle);
 
-    // 炮管
+    // 炮管（长度见文件顶部 BARREL_LEN；炮口环贴着炮管末端放）
+    var barrelTip = R * (0.30 + BARREL_LEN);
     ctx.fillStyle = shade(t.color, -0.38);
-    roundRect(R * 0.30, -R * 0.16, R * 1.06, R * 0.32, R * 0.16);
+    roundRect(R * 0.30, -R * 0.16, R * BARREL_LEN, R * 0.32, R * 0.16);
     ctx.fill();
     // 炮口
     ctx.fillStyle = shade(t.color, -0.58);
-    roundRect(R * 1.18, -R * 0.20, R * 0.22, R * 0.40, R * 0.10);
+    roundRect(barrelTip - R * 0.18, -R * 0.20, R * 0.22, R * 0.40, R * 0.10);
     ctx.fill();
 
     // 炮塔圆盘
