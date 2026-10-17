@@ -1,100 +1,4862 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0f1216">
+<meta name="description" content="坦克动荡 1v1 对战 —— 15 关轮换式升级，9 种技能，网页单文件游戏">
+<meta property="og:title" content="坦克动荡 · 1v1 对战">
+<meta property="og:description" content="15 关轮换升级 · 9 种技能 · 手机也能玩">
+<meta property="og:type" content="website">
 <link rel="icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="favicon.ico">
-<meta name="theme-color" content="#0f1216">
-<meta name="description" content="坦克动荡 1v1 对战 —— 15 关轮换式升级，9 种技能，单文件网页游戏">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-<title>坦克动荡 · 1v1 对战</title>
+<title>坦克动荡 · 15 关闯关</title>
 <style>
-  * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; }
-  body {
-    background: radial-gradient(circle at 50% 22%, #1b2530 0%, #0f1216 62%, #08090b 100%);
-    color: #e8eef4;
-    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, -apple-system, sans-serif;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 26px; padding: 28px 20px;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
+  :root {
+    --bg: #10131c;
+    --panel: #1a1f2e;
+    --panel-2: #222839;
+    --line: rgba(255, 255, 255, .10);
+    --ink: #eef2ff;
+    --ink-soft: #97a1bd;
+    --gold: #ffd666;
+    --gold-deep: #c9962b;
+    --teal: #4ecdc4;
+    --red: #ff6b6b;
+    --radius: 16px;
   }
-  .logo { font-size: 62px; line-height: 1; filter: drop-shadow(0 6px 20px rgba(90,170,255,.35)); animation: pop .55s cubic-bezier(.2,1.4,.4,1) both; }
-  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  h1 { margin: 0; font-size: 27px; letter-spacing: 3px; font-weight: 700; }
-  .sub { margin: 0; font-size: 14px; color: #8fa3b6; letter-spacing: 1px; }
-  .play {
-    display: block; width: min(400px, 88vw);
-    padding: 19px 0; margin-top: 6px;
-    background: linear-gradient(135deg, #3f7fd6, #2a5fa8);
-    color: #fff; font-size: 19px; font-weight: 700; letter-spacing: 3px;
-    text-align: center; text-decoration: none;
-    border-radius: 13px; border: none; cursor: pointer;
-    box-shadow: 0 8px 26px rgba(48,110,196,.45), inset 0 1px 0 rgba(255,255,255,.22);
-    transition: transform .13s ease, box-shadow .13s ease, filter .13s ease;
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(1100px 700px at 50% -8%, #1c2333 0%, #10131c 62%);
+    color: var(--ink);
+    font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    min-height: 100%;
+    overscroll-behavior: none;
   }
-  .play:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(48,110,196,.6), inset 0 1px 0 rgba(255,255,255,.22); }
-  .play:active { transform: translateY(1px) scale(.985); filter: brightness(.94); }
-  .tips {
-    display: flex; flex-wrap: wrap; justify-content: center;
-    gap: 8px 10px; max-width: 460px;
+
+  .app {
+    /* 宽屏充分利用空间：随视口增长，上限 1240px；窄屏保持自适应。
+       原来的 640px 会让游戏在 1080p/2K 屏上缩成中间一小块。 */
+    width: 100%;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 14px 14px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
   }
+
+  .title-bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .title-bar h1 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: .10em;
+    background: linear-gradient(90deg, #ffd666, #ffb347 60%, #ff8f5e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hint {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    letter-spacing: .04em;
+  }
+
+  /* ---------- HUD ---------- */
+  .hud {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
   .chip {
-    font-size: 12.5px; color: #9db2c6;
-    background: rgba(255,255,255,.055);
-    border: 1px solid rgba(255,255,255,.09);
-    padding: 6px 12px; border-radius: 999px; white-space: nowrap;
+    flex: 1 1 0;
+    min-width: 74px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 7px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
   }
-  .hint { font-size: 12px; color: #64798d; letter-spacing: .5px; text-align: center; line-height: 1.75; }
+
+  .chip .label {
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    letter-spacing: .10em;
+  }
+
+  .chip .value {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .chip.p-score .value { color: var(--teal); }
+  .chip.e-score .value { color: var(--red); }
+  .chip.coin .value { color: var(--gold); }
+  .chip.round .value { color: #b8a1ff; }
+
+  .icon-btn {
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    width: 42px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 17px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s ease, transform .1s ease;
+  }
+
+  .icon-btn:hover { background: var(--panel-2); }
+  .icon-btn:active { transform: scale(.94); }
+
+  .icon-btn.has-new {
+    animation: shopPulse 1.5s ease-in-out infinite;
+    border-color: rgba(255, 214, 102, .6);
+  }
+
+  @keyframes shopPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 214, 102, .45); }
+    50% { box-shadow: 0 0 0 7px rgba(255, 214, 102, 0); }
+  }
+
+  /* ---------- 战场 ---------- */
+  /* 注意：这里刻意不使用 aspect-ratio（部分内嵌预览器内核不支持，
+     会导致容器高度塌成 0、整页看起来"打不开"）。
+     改为由 JS 在 resize() 里显式设置 stage 的高度。 */
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 560px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #0c0f16;
+    border: 1px solid var(--line);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, .5);
+  }
+
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* 草丛隐蔽提示（玩家站在草里时出现） */
+  .hidden-badge {
+    position: absolute;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%) translateY(6px);
+    padding: 5px 15px;
+    border-radius: 999px;
+    background: rgba(36, 92, 54, .90);
+    border: 1px solid rgba(140, 226, 160, .55);
+    color: #c9f7d4;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .10em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .18s ease, transform .18s ease;
+    z-index: 6;
+  }
+  .hidden-badge.on {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .hidden-badge.revealed {
+    background: rgba(120, 74, 30, .92);
+    border-color: rgba(255, 196, 110, .6);
+    color: #ffdda6;
+  }
+
+  /* ---------- 覆盖层 ---------- */
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(12, 15, 22, .90);
+    backdrop-filter: blur(3px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    padding: 22px;
+    text-align: center;
+    z-index: 5;
+    overflow-y: auto;
+  }
+
+  .overlay.hidden { display: none; }
+
+  .overlay h2 {
+    margin: 0;
+    font-size: 25px;
+    letter-spacing: .08em;
+    background: linear-gradient(90deg, #ffd666, #ff9a5e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .overlay .sub {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.75;
+    max-width: 430px;
+  }
+
+  .overlay .big {
+    font-size: 40px;
+    font-weight: 800;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  .overlay .grade {
+    font-size: 13px;
+    letter-spacing: .16em;
+    color: var(--teal);
+  }
+
+  .legends {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    justify-content: center;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    max-width: 420px;
+  }
+
+  .legends span { display: inline-flex; align-items: center; gap: 5px; }
+
+  .dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    display: inline-block;
+  }
+
+  .dot.brick { background: #c96a3e; }
+  .dot.steel { background: #b9c0cc; }
+  .dot.grass { background: #4a9d5c; }
+  .dot.me { background: var(--teal); }
+  .dot.foe { background: var(--red); }
+
+  .btn {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    color: #2b2f3a;
+    background: linear-gradient(180deg, #ffe28a, #f5b942);
+    padding: 11px 34px;
+    border-radius: 999px;
+    box-shadow: 0 4px 0 var(--gold-deep), 0 8px 20px rgba(255, 214, 102, .3);
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+
+  .btn:hover { filter: brightness(1.06); }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--gold-deep); }
+
+  .btn.ghost {
+    background: transparent;
+    color: var(--gold);
+    border: 1.5px solid rgba(255, 214, 102, .65);
+    box-shadow: none;
+  }
+
+  .btn.ghost:hover { background: rgba(255, 214, 102, .12); }
+  .btn.ghost:active { transform: translateY(2px); box-shadow: none; }
+
+  /* 「从头开始」：比开始按钮小一号，避免和主按钮抢注意力 */
+  .btn.save-restart {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    padding: 7px 18px;
+    margin-top: -2px;
+    opacity: .8;
+  }
+  .btn.save-restart.armed {
+    color: #ffb4b4;
+    border-color: rgba(255, 120, 120, .8);
+    opacity: 1;
+  }
+
   kbd {
-    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16);
-    border-radius: 5px; padding: 1px 7px; font-family: inherit; font-size: 11.5px; color: #c3d3e2;
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 214, 102, .5);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    padding: 2px 6px;
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--gold);
+    font-weight: 700;
   }
-  @media (max-width: 480px) {
-    .logo { font-size: 50px; }
-    h1 { font-size: 22px; letter-spacing: 2px; }
+
+  /* ---------- 局数选择 / 对手强度选择 ---------- */
+  .round-pick,
+  .tier-pick {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .round-pick .rp-label,
+  .tier-pick .rp-label {
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: .08em;
+  }
+
+  .round-pick button,
+  .tier-pick button {
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 15px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+
+  .round-pick button.on,
+  .tier-pick button.on {
+    color: #2b2f3a;
+    background: linear-gradient(180deg, #ffe28a, #f5b942);
+    border-color: transparent;
+    box-shadow: 0 2px 0 var(--gold-deep);
+  }
+
+  /* 对手强度：选中时按档位配色 */
+  .tier-pick button[data-tier="easy"].on {
+    background: linear-gradient(180deg, #b6f2d8, #4ecfa0);
+    box-shadow: 0 2px 0 #2f9c76;
+  }
+  .tier-pick button[data-tier="hard"].on {
+    background: linear-gradient(180deg, #ffc0b4, #f2705a);
+    box-shadow: 0 2px 0 #c0442c;
+  }
+
+  .tier-pick .tp-hint {
+    font-size: 12px;
+    color: var(--ink-soft);
+    opacity: .82;
+    letter-spacing: .04em;
+  }
+
+  /* 自定义局数输入 */
+  .round-pick .rp-custom {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: .08em;
+  }
+
+  .round-pick .rp-custom input {
+    width: 52px;
+    padding: 5px 6px;
+    text-align: center;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--panel);
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    outline: none;
+    transition: all .15s ease;
+  }
+
+  .round-pick .rp-custom input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(245, 185, 66, .18);
+  }
+
+  /* 隐藏数字输入的上下箭头，用键盘输入更清爽 */
+  .round-pick .rp-custom input::-webkit-outer-spin-button,
+  .round-pick .rp-custom input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .round-pick .rp-custom input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* ---------- 背景音量滑杆 ---------- */
+  .vol-pick input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 132px;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--line);
+    outline: none;
+    cursor: pointer;
+  }
+  .vol-pick input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #ffe28a, #f5b942);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+  }
+  .vol-pick input[type=range]::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #f5b942;
+    border: none;
+    cursor: pointer;
+  }
+  .vol-pick .vol-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-soft);
+    min-width: 36px;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- 比分板 ---------- */
+  .scoreboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: .06em;
+  }
+
+  .scoreboard .sb-me { color: var(--teal); font-weight: 800; }
+  .scoreboard .sb-foe { color: var(--red); font-weight: 800; }
+  .scoreboard .sb-sep { opacity: .45; }
+
+  /* ---------- 手机控制 ---------- */
+  .pad {
+    display: none;
+    width: 100%;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 18px;
+    margin-top: 4px;
+    padding: 0 6px;
+  }
+
+  .dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 54px);
+    grid-template-rows: repeat(2, 54px);
+    gap: 7px;
+  }
+
+  .dpad button, .fire-btn {
+    border: 1.5px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    border-radius: 13px;
+    font-size: 17px;
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
+    transition: background .1s ease;
+  }
+
+  .dpad button:active, .fire-btn:active { background: var(--panel-2); }
+
+  .dpad .u { grid-column: 2; grid-row: 1; }
+  .dpad .l { grid-column: 1; grid-row: 2; }
+  .dpad .d { grid-column: 2; grid-row: 2; }
+  .dpad .r { grid-column: 3; grid-row: 2; }
+
+  .fire-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .fire-btn {
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    font-size: 26px;
+    background: linear-gradient(180deg, #ff8f5e, #e05a3a);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 0 #a83a20;
+  }
+
+  .fire-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #a83a20; }
+
+  .fire-label { font-size: 10.5px; color: var(--ink-soft); letter-spacing: .1em; }
+
+  @media (pointer: coarse) { .pad { display: grid; } }
+
+  .footer-note {
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  /* ---------- 商店 ---------- */
+  .shop-panel {
+    position: absolute;
+    inset: 0;
+    background: rgba(12, 15, 22, .95);
+    backdrop-filter: blur(4px);
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 11px;
+    overflow-y: auto;
+  }
+
+  .shop-panel.hidden { display: none; }
+
+  .shop-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .shop-head h3 {
+    margin: 0;
+    font-size: 17px;
+    letter-spacing: .06em;
+    color: var(--gold);
+  }
+
+  .shop-balance { font-size: 12px; color: var(--ink-soft); }
+  .shop-balance b { color: var(--gold); font-size: 15px; }
+
+  .shop-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+    gap: 9px;
+  }
+
+  .shop-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    padding: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .shop-card.afford { border-color: rgba(255, 214, 102, .45); }
+  .shop-card.maxed { opacity: .62; }
+
+  .sc-top {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .sc-icon { font-size: 17px; }
+
+  .sc-name {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: .06em;
+  }
+
+  .sc-desc { font-size: 11px; color: var(--ink-soft); line-height: 1.5; }
+
+  .dot-lv {
+    display: flex;
+    gap: 3px;
+  }
+
+  .dot-lv i {
+    width: 13px;
+    height: 5px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, .14);
+    display: block;
+  }
+
+  .dot-lv i.on { background: var(--gold); }
+
+  .shop-buy {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: .06em;
+    padding: 8px;
+    border-radius: 9px;
+    color: #2b2f3a;
+    background: linear-gradient(180deg, #ffe28a, #f5b942);
+    box-shadow: 0 2px 0 var(--gold-deep);
+    transition: filter .12s ease;
+  }
+
+  .shop-buy:hover { filter: brightness(1.07); }
+  .shop-buy:disabled { background: #3a4256; color: #6d7691; box-shadow: none; cursor: not-allowed; }
+
+  .shop-stats {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    line-height: 1.8;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 10px 12px;
+  }
+
+  .shop-stats b { color: var(--teal); }
+
+  .shop-actions { display: flex; justify-content: center; margin-top: auto; }
+
+  .shop-close {
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 800;
+    letter-spacing: .1em;
+    padding: 10px 28px;
+    border-radius: 999px;
+    color: #2b2f3a;
+    background: linear-gradient(180deg, #ffe28a, #f5b942);
+    box-shadow: 0 3px 0 var(--gold-deep);
+  }
+
+  .shop-toast {
+    position: absolute;
+    left: 50%;
+    bottom: 74px;
+    transform: translateX(-50%) translateY(8px);
+    background: rgba(255, 214, 102, .95);
+    color: #2b2f3a;
+    font-size: 12.5px;
+    font-weight: 700;
+    padding: 7px 17px;
+    border-radius: 999px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    white-space: nowrap;
+  }
+
+  .shop-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ---------- 整备车间：技能三选一 ---------- */
+  .prep-banner {
+    background: linear-gradient(180deg, rgba(255,214,102,.16), rgba(255,214,102,.05));
+    border: 1px solid rgba(255, 214, 102, .40);
+    border-radius: 11px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    color: var(--gold);
+    line-height: 1.6;
+    text-align: center;
+  }
+  .prep-banner.hidden { display: none; }
+
+  .prep-sec { display: flex; flex-direction: column; gap: 7px; }
+  .prep-sec.hidden { display: none; }
+
+  .prep-title {
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    color: var(--ink);
+  }
+  .prep-note {
+    font-size: 11.5px;
+    font-weight: 400;
+    color: var(--ink-soft);
+    letter-spacing: .02em;
+  }
+
+  .skill-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 9px;
+  }
+
+  .skill-card {
+    position: relative;
+    background: var(--panel);
+    border: 1.5px solid var(--line);
+    border-radius: 13px;
+    padding: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .skill-card:hover { border-color: rgba(184, 161, 255, .75); background: var(--panel-2); }
+  .skill-card.on {
+    border-color: var(--gold);
+    background: rgba(255, 214, 102, .10);
+    box-shadow: 0 0 0 3px rgba(245, 185, 66, .16);
+  }
+  .skill-card.on::after {
+    content: '已选';
+    position: absolute;
+    top: 8px; right: 9px;
+    font-size: 10px;
+    font-weight: 800;
+    color: #2b2f3a;
+    background: var(--gold);
+    border-radius: 999px;
+    padding: 2px 7px;
+  }
+  .sk-icon { font-size: 19px; line-height: 1; color: #b8a1ff; }
+  .sk-name { font-size: 13.5px; font-weight: 800; letter-spacing: .04em; }
+  .sk-desc { font-size: 11px; color: var(--ink-soft); line-height: 1.55; }
+  .sk-lv { font-size: 10.5px; color: var(--teal); letter-spacing: .04em; margin-top: 2px; }
+
+  .shop-close:disabled {
+    background: #3a4256;
+    color: #6d7691;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  /* ---------- 关卡战前简报 ---------- */
+  .lv-buffs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    max-width: 460px;
+  }
+
+  .lv-buff {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 11px;
+    white-space: nowrap;
+  }
+
+  .lv-buff.big {
+    color: #2b2f3a;
+    font-weight: 800;
+    background: linear-gradient(180deg, #ffc0b4, #f2705a);
+    border-color: transparent;
+    box-shadow: 0 2px 0 #c0442c;
+  }
+
+  /* 单台性能回调项：数量变多时单台会小幅削弱，用蓝灰区分，避免误读成"变弱了" */
+  .lv-buff.down {
+    color: #2c5b73;
+    background: linear-gradient(180deg, #d5eefb, #b4ddf4);
+    border-color: transparent;
+    box-shadow: 0 2px 0 #7fb4cf;
+  }
+
+  .lv-buff.down.big {
+    color: #2b2f3a;
+    background: linear-gradient(180deg, #ffd9b4, #f4a95a);
+    box-shadow: 0 2px 0 #c07a2c;
+  }
+
+  .lv-stats {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    padding: 8px 12px;
+    max-width: 460px;
+    line-height: 1.9;
+  }
+
+  .lv-stat-row { display: flex; flex-wrap: wrap; gap: 4px 8px; justify-content: center; }
+  .lv-stat {
+    color: var(--ink-soft);
+    background: rgba(255, 255, 255, .05);
+    border-radius: 6px;
+    padding: 1px 7px;
+    white-space: nowrap;
+  }
+
+  .lv-count {
+    font-size: 12.5px;
+    letter-spacing: .06em;
+    color: var(--teal);
+    min-height: 18px;
+  }
+
+  .mini {
+    font-size: 10px;
+    color: var(--teal);
+    letter-spacing: .02em;
+  }
+  .chip.e-score .mini { color: var(--red); }
+  .chip p-score .mini { color: #7fd6ff; }
+
+  .dot.shield { background: #7fd6ff; }
+
+  .btn-row {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
 </style>
 </head>
 <body>
-  <div class="logo">🎯</div>
-  <h1>坦克动荡</h1>
-  <p class="sub">1v1 对战 · 15 关轮换升级</p>
 
-  <a class="play" href="坦克动荡-1v1对战.html" id="startBtn">开 始 游 戏</a>
+<div class="app">
 
-  <div class="tips">
-    <span class="chip">🚀 15 个关卡</span>
-    <span class="chip">🎯 9 种技能</span>
-    <span class="chip">🎵 自带背景音乐</span>
-    <span class="chip">📱 手机可玩</span>
+  <div class="title-bar">
+    <h1>坦克动荡 · 闯关</h1>
+    <span class="hint" id="hintText">A/D 转车头　W/S 前进后退　空格开火</span>
   </div>
 
-  <p class="hint">
-    电脑：<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动 · 鼠标瞄准 · 左键开火<br>
-    手机：屏幕左下角虚拟摇杆移动 · 右侧点位开火 · 横屏体验更好<br>
-    <span style="color:#7d93a8">进入后点一下屏幕音乐才会响起（浏览器规则）</span>
-  </p>
+  <div class="hud">
+    <div class="chip round">
+      <span class="label">关卡</span>
+      <span class="value" id="uiLevel">1 / 15</span>
+    </div>
+    <div class="chip round">
+      <span class="label">本关比分</span>
+      <span class="value" id="uiRound">0 : 0</span>
+    </div>
+    <div class="chip p-score">
+      <span class="label">我的血量 <span class="mini" id="uiLifeShield"></span></span>
+      <span class="value" id="uiLife">3</span>
+    </div>
+    <div class="chip e-score">
+      <span class="label">敌方 <span class="mini" id="uiFoeLv">×0/0</span></span>
+      <span class="value" id="uiFoeHp">0</span>
+    </div>
+    <div class="chip coin">
+      <span class="label">金币</span>
+      <span class="value" id="uiCoins">0</span>
+    </div>
+    <button class="icon-btn" id="btnHome" title="返回主页">🏠</button>
+    <button class="icon-btn" id="btnShop" title="升级车间">🛒</button>
+    <button class="icon-btn" id="btnSound" title="音效开关">🔊</button>
+    <button class="icon-btn" id="btnBgm" title="背景音乐开关">🎵</button>
+    <button class="icon-btn" id="btnPause" title="暂停 / 继续">⏸</button>
+  </div>
 
-  <script>
-    // 预加载音乐，进游戏时就不用等
-    (function () {
-      try {
-        var a = new Audio('bgm.mp3');
-        a.preload = 'auto';
-        a.volume = 0;
-        a.play().then(function () { a.pause(); }).catch(function () {});
-      } catch (e) {}
-    })();
-    // 手机上把地址栏挤掉一点，画面更满
-    document.getElementById('startBtn').addEventListener('click', function () {
-      setTimeout(function () { window.scrollTo(0, 1); }, 60);
+  <div class="stage" id="stage">
+    <canvas id="game"></canvas>
+    <!-- 草丛隐蔽提示：玩家站在草里时出现，靠 updateHiddenBadge 按状态切换 -->
+    <div class="hidden-badge" id="hiddenBadge">🌿 已隐蔽</div>
+
+    <!-- 整备车间（技能三选一 + 装备升级；战斗中也可点 🛒 只买东西） -->
+    <div class="shop-panel hidden" id="shopPanel">
+      <div class="shop-head">
+        <h3 id="shopTitle">🛠 整备车间</h3>
+        <span class="shop-balance">金币 <b id="shopCoins">0</b></span>
+      </div>
+      <div class="prep-banner" id="prepBanner"></div>
+
+      <div class="prep-sec" id="skillSec">
+        <div class="prep-title">🎁 选择一个新技能 <span class="prep-note" id="skillNote">（选 1 个）</span></div>
+        <div class="skill-row" id="skillRow"></div>
+      </div>
+
+      <div class="prep-sec">
+        <div class="prep-title">💰 装备升级</div>
+        <div class="shop-row" id="shopRow"></div>
+      </div>
+
+      <div class="shop-stats" id="shopStats"></div>
+      <div class="shop-actions">
+        <button class="shop-close" id="btnShopClose">返回战场</button>
+      </div>
+      <div class="shop-toast" id="shopToast"></div>
+    </div>
+
+    <!-- 开始 -->
+    <div class="overlay" id="ovStart">
+      <h2>坦克动荡 · 闯关</h2>
+      <p class="sub">
+        一共 <b>15 关</b>。每关打若干局，<b>赢下多数</b>就能过这一关。<br>
+        每通过一关，可以 <b>自选 1 个新技能</b>，再用金币在整备车间强化坦克。<br>
+        越往后敌人越凶：更快、更灵活、子弹更快更密、会散射、数量更多、还带护盾。<br>
+        坦克像真车一样开：<b>A/D 转车头</b>，<b>W/S 前进与倒车</b>，炮筒永远跟车头同向。<br>
+        <span style="opacity:.75">每关开始时，都会先告诉你这一关的敌人强在哪。</span>
+      </p>
+      <div class="round-pick" id="roundPick">
+        <span class="rp-label">每关局数</span>
+        <button data-rounds="1">1 局</button>
+        <button data-rounds="3" class="on">3 局 2 胜</button>
+        <button data-rounds="5">5 局 3 胜</button>
+        <button data-rounds="7">7 局 4 胜</button>
+        <span class="rp-custom">
+          自定义
+          <input type="number" id="roundInput" min="1" max="99" step="2" value="3" inputmode="numeric">
+          局
+        </span>
+      </div>
+      <div class="tier-pick" id="diffPick">
+        <span class="rp-label">整体难度</span>
+        <button data-diff="easy">🟢 轻松</button>
+        <button data-diff="normal" class="on">🟡 普通</button>
+        <button data-diff="hard">🔴 困难</button>
+        <span class="tp-hint" id="diffHint"></span>
+      </div>
+      <div class="tier-pick vol-pick">
+        <span class="rp-label">背景音量</span>
+        <input type="range" id="bgmVol" min="0" max="100" step="5" value="70">
+        <span class="vol-num" id="bgmVolNum">70%</span>
+      </div>
+      <div class="legends">
+        <span><i class="dot me"></i>你</span>
+        <span><i class="dot foe"></i>敌方坦克</span>
+        <span><i class="dot shield"></i>护盾 · 先扣盾再扣血</span>
+        <span><i class="dot brick"></i>砖墙 · 可打碎</span>
+        <span><i class="dot steel"></i>钢墙 · 反弹子弹</span>
+        <span title="站进草丛里，敌人就看不见你（贴到脸上除外）；但开火会亮枪口火光，暴露 1 秒。敌人躲进去你也看不见它"><i class="dot grass"></i>草丛 · 能藏身 · 开火会暴露</span>
+      </div>
+      <button class="btn" id="btnStart">开始闯关</button>
+      <button class="btn ghost save-restart" id="btnRestart" style="display:none">从头开始</button>
+      <p class="sub" id="bestLine">历史最高：第 1 关</p>
+      <p class="sub" style="margin-top:-2px">
+        <kbd>A</kbd><kbd>D</kbd> 或 <kbd>←</kbd><kbd>→</kbd> 转车头　<kbd>W</kbd><kbd>S</kbd> 或 <kbd>↑</kbd><kbd>↓</kbd> 前进 / 倒车　<kbd>空格</kbd> 开火　<kbd>P</kbd> 暂停<br>
+        <span style="opacity:.72">炮筒始终朝车头方向 —— 想打哪里，就把车头转过去</span>
+      </p>
+    </div>
+
+    <!-- 关卡战前简报：本关敌人增强了什么 -->
+    <div class="overlay hidden" id="ovLevel">
+      <h2 id="lvTitle">第 1 / 15 关</h2>
+      <p class="sub" id="lvName">新兵营</p>
+      <div class="lv-buffs" id="lvBuffs"></div>
+      <div class="lv-stats" id="lvStats"></div>
+      <div class="lv-count" id="lvCount"></div>
+      <button class="btn" id="btnLevelGo">立即开打</button>
+    </div>
+
+    <!-- 暂停 -->
+    <div class="overlay hidden" id="ovPause">
+      <h2>暂停中</h2>
+      <p class="sub">按 P 或点击按钮继续对战</p>
+      <button class="btn" id="btnResume">继续</button>
+      <button class="btn ghost" id="btnHomePause">返回主页</button>
+    </div>
+
+    <!-- 单局 / 单关结束 -->
+    <div class="overlay hidden" id="ovRound">
+      <h2 id="roundTitle">本局结束</h2>
+      <p class="sub" id="roundSub"></p>
+      <div class="big" id="roundScore">0 : 0</div>
+      <div class="btn-row" id="roundBtnRow">
+        <button class="btn" id="btnNextRound">下一局</button>
+        <button class="btn ghost" id="btnHomeRound">返回主页</button>
+      </div>
+    </div>
+
+    <!-- 通关 -->
+    <div class="overlay hidden" id="ovOver">
+      <h2 id="overTitle">闯关结束</h2>
+      <p class="sub" id="overSub"></p>
+      <div class="big" id="overScore">0 / 15</div>
+      <div class="grade" id="overGrade"></div>
+      <p class="sub" id="overEarn"></p>
+      <p class="sub" id="overBest">历史最高：第 1 关</p>
+      <div class="btn-row">
+        <button class="btn" id="btnAgain">再闯一次</button>
+        <button class="btn ghost" id="btnHomeOver">返回主页</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 手机控制 -->
+  <div class="pad" id="pad">
+    <div class="dpad">
+      <button class="u" data-key="up">▲</button>
+      <button class="l" data-key="left">◀</button>
+      <button class="d" data-key="down">▼</button>
+      <button class="r" data-key="right">▶</button>
+    </div>
+    <div class="fire-wrap">
+      <button class="fire-btn" data-key="fire">◎</button>
+      <span class="fire-label">开火</span>
+    </div>
+  </div>
+
+  <p class="footer-note">撞墙不会停，但会被挡住；子弹碰钢墙会反弹，碰砖墙则炸碎砖块。</p>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ==================== 常量配置 ====================
+  var COLS = 20, ROWS = 20;          // 战场格数
+  var TANK = 0.88;                   // 坦克直径（格）—— 比原版明显更大，同时保留过窄缝的余量
+  var P_SPEED = 0.0040;              // 玩家基础速度（格/毫秒）→ 约 4.0 格/秒
+  var BULLET_SPEED = 0.011;          // 子弹基础速度（格/毫秒）→ 约 11 格/秒（放慢，看清弹道）
+  var BULLET_R = 0.085;              // 子弹半径（格）
+  var FIRE_CD = 420;                 // 玩家基础开火冷却
+  var TURN_SPEED = 0.0031;           // 玩家车体转向角速度（弧度/毫秒）→ 约 178°/秒（调慢，好转过头）
+  var REVERSE_MUL = 0.68;            // 倒车速度倍率（坦克倒着开更慢）
+  var BOUNCE_MAX = 2;                // 子弹最多反弹次数
+  var SPREAD_ARC = 0.15;             // 散射时相邻两发的夹角（弧度）≈ 8.6°
+  // ---- 坦克外观 ----
+  // 炮管长度（× 坦克半径 R），从炮塔中心往车头方向量。纯美术，不改弹道：
+  // 子弹出生点仍是 t.r + BULLET_R（见 fire），远短于炮口，而子弹是在坦克之前
+  // 绘制的（见 draw），所以子弹会被炮管盖住，看起来就是从炮口里飞出来的。
+  var BARREL_LEN = 1.30;             // 老值 1.06（2026-10-17 玩家要求炮管长一点）
+  // ---- AI 瞄准手感 ----
+  // 老做法：每隔 reactMs 抽一个「瞄准角偏差」，这一整段时间内偏差固定不变。
+  //   后果 = 只要这次抽偏了，这段时间里每一发都偏；抽正了，每一发都中
+  //   → 玩家看到的节奏就是「一连串打不中，然后一连串打中」。
+  // 新做法：偏差拆成两份 —— 炮口有一点持续的小摆动（看起来在"追"目标），
+  //   真正的误差主要放在每发子弹出膛的瞬间独立抽取，所以命不命中互不相关。
+  var AIM_WOBBLE = 0.25;             // 炮口跟随目标的残余摆动（× 关卡 jitter）
+  var AIM_SCATTER = 0.62;            // 每发子弹的独立散布（× 关卡 jitter）
+  var HULL_TURN_RATE = 7.0;          // 敌人车体的最大转向速度（rad/s，约 400°/s）
+                                     // 只是观感：以前 moveAngle 直接赋值，方向一变车体
+                                     // 就瞬间弹到新角度；贴墙反复换向时会闪成"抽搐"。
+  // ⚠️ 2026-10-17 由 1.05 收紧到 0.62：玩家反馈"敌人打得太飘"。
+  //    5 格距离命中率 41% → 65%，9 格 23% → 37%；难度靠"仍然会漏"来保留，
+  //    不要低于 0.45（那时候中距离接近必中，玩家会觉得没地方可躲）。
+                                     // ↑ 校准值：让"每秒挨的弹数"与改动前基本持平
+
+  var PIERCE_CHANCE = 0.5;           // 穿墙弹「带电」概率：学过技能后约一半子弹能穿钢墙
+                                     // （不做成 100%，是为了让砖墙/钢墙的掩体价值仍然存在）
+  var ROUND_DELAY = 1600;            // 单局结束后的过场延迟
+  var BRIEF_MS = 3600;               // 关卡简报自动开打的倒计时
+  var TOTAL_LEVELS = 15;             // 一共 15 关
+  var BEST_KEY = 'tank1v1-best-level';   // 历史最高到达关卡
+  var CLEAR_KEY = 'tank1v1-clears';      // 通关次数
+  var ROUNDS_KEY = 'tank1v1-rounds';     // 每关局数（玩家偏好，持久）
+  var DIFF_KEY = 'tank1v1-diff';         // 整体难度（玩家偏好，持久）
+  var BGMVOL_KEY = 'tank1v1-bgmvol';     // 背景音量档位 0~100（玩家偏好，持久）
+  var SAVE_KEY = 'tank1v1-run';          // 闯关存档：下次打开可以接着打（跨会话）
+
+  // 背景音量档位（玩家侧 0~100）。声明放在这里的原因：
+  // loadProgress() 会回填它，而 loadProgress 在启动阶段就被调用 ——
+  // 若声明留在下面的音乐模块里，赋值时机晚于读取，会读到 undefined。
+  var bgmVolumePct = 70;
+
+  // ---------- 基础属性 ----------
+  var BASE_HP = 3;                   // 玩家基础血量（可被升级 / 技能提升）
+
+  // ---------- 整体难度（在 15 关曲线上再乘一个系数）----------
+  // mul     : 体量系数（速度 / 开火频率 / 弹速 / 耐久）
+  // aimMul  : 瞄准散布系数，>1 = 更飘更难打中你
+  // reactMul: 感知刷新间隔系数，>1 = 反应更慢
+  // 三者相乘才是完整难度 —— 只动 mul 会出现"敌人更多更快但一样准"的违和感。
+  var DIFFS = [
+    { id: 'easy',   name: '轻松', mul: 0.86, aimMul: 1.35, reactMul: 1.22,
+      desc: '更慢更飘更迟钝 · 先摸清玩法' },
+    { id: 'normal', name: '普通', mul: 1.00, aimMul: 1.00, reactMul: 1.00,
+      desc: '标准强度 · 推荐' },
+    { id: 'hard',   name: '困难', mul: 1.16, aimMul: 0.76, reactMul: 0.82,
+      desc: '更快更准更机警 · 老兵挑战' }
+  ];
+  var diffIdx = 1;                   // 默认「普通」
+
+  // ---------- 15 关敌方成长曲线 ----------
+  // 每一关的敌人「水平完全一致」：同一关里不管打第几局，敌人参数都不变。
+  // 关卡之间的差异体现在下面这些维度上（也是简报里向玩家展示的内容）：
+  //   foes       敌方坦克数量
+  //   spd        移动速度倍率（× 玩家基础速度）
+  //   bspd       子弹速度倍率（× 玩家基础弹速）
+  //   cd         开火冷却倍率（越小打得越勤）
+  //   turn       转向灵活度倍率
+  //   react      反应延迟 ms（越小越灵敏）
+  //   jitter     瞄准抖动（弧度，越小越准）
+  //   lead       预判系数（0 = 不预判走位）
+  //   dodge      躲子弹能力 0~1
+  //   shield     护盾点数（先扣盾，盾破才掉血）
+  //   hp         血量
+  //   maxBullets 同屏子弹「组」数上限
+  //   spread     一次射出几发（扇形散射）
+  //   fire       视线畅通时的开火概率
+  // ==================== 关卡表（轮换式升级） ====================
+  // 设计原则（用户反馈："不要每关对面坦克都全方位升级，升级一部分就行了"）：
+  //   ① 每关只突出一个「主角维度」，该维度大幅跳升；
+  //   ② 另配 1~2 项小幅微调，其余维度持平或回落 —— 不做六边形战士；
+  //   ③ 每关有鲜明「性格」，玩家要换对策：
+  //        这关炮快 → 下关弹快 → 下关皮厚 → 下关会跑 → 下关扇面 → 下关双车……
+  //   ④ 数量台阶关（8 / 13）单台性能全面回落，总威胁允许小幅回呼，形成呼吸感；
+  //   ⑤ 第 15 关是唯一允许「全项略强」的终局关。
+  //   ⚠️ 改这张表后务必跑 level_jsdom_test.js，它会校验：
+  //      「非数量台阶关变强的维度 ≤ 4 项」+「威胁指数不出现大幅倒退」+「第 15 关威胁最高」。
+  //   ⚠️ fire（开火概率）是手感敏感字段，务必保持在 0.015~0.045 的合理区间，
+  //      压到 0.01 以下敌人会「站着不开枪」，玩家会以为游戏坏了。
+  //
+  // 各关主题（⭐=主角维度）：
+  //    1  新兵营     教学：小、慢、1 血，先熟悉手感
+  //    2  ⭐射速     枪快了一倍，车本身没变
+  //    3  ⭐弹速     子弹飞快、会算提前量，但转向变笨
+  //    4  ⭐护盾     披上装甲，但更慢更笨
+  //    5  ⭐散射     开始打扇面，但弹速回落
+  //    6  ⭐机动     又快又灵、会闪避，但打不准
+  //    7  ⭐火力     三发+高射速爆发，但变慢
+  //    8  ⭐数量2台  双车夹击，单台性能全面回落
+  //    9  ⭐护盾+血  重装甲，但射速放慢
+  //   10  ⭐射速+散射 弹幕压制，但反应变慢
+  //   11  ⭐预判+闪避 会算提前量、极难打中，但血量回落
+  //   12  ⭐护盾+散射 又肉又猛，但机动性回落
+  //   13  ⭐数量3台  三车包围，单台性能大幅回落
+  //   14  ⭐护盾+血  铁壁纵深，但射速明显放慢
+  //   15  ⭐综合终局  最终堡垒：唯一全项略强于前关的关卡
+  var LEVELS = [
+    /*  1 教学   */ { name: '新兵营',   foes: 1, spd: 0.60, bspd: 0.85, cd: 1.90, turn: 0.70, react: 720, jitter: 0.300, lead: 0.00, dodge: 0.00, shield: 0, hp: 1, maxBullets: 1, spread: 1, fire: 0.013, size: 1.30 },
+    /*  2 射速⭐ */ { name: '快速射击', foes: 1, spd: 0.60, bspd: 0.85, cd: 0.95, turn: 0.70, react: 690, jitter: 0.300, lead: 0.00, dodge: 0.00, shield: 0, hp: 1, maxBullets: 1, spread: 1, fire: 0.031, size: 1.27 },
+    /*  3 弹速⭐ */ { name: '穿甲弹',   foes: 1, spd: 0.58, bspd: 1.58, cd: 1.00, turn: 0.64, react: 700, jitter: 0.285, lead: 0.26, dodge: 0.00, shield: 0, hp: 1, maxBullets: 1, spread: 1, fire: 0.030, size: 1.24 },
+    /*  4 护盾⭐ */ { name: '铁皮罐头', foes: 1, spd: 0.54, bspd: 1.50, cd: 1.15, turn: 0.60, react: 720, jitter: 0.295, lead: 0.22, dodge: 0.00, shield: 3, hp: 2, maxBullets: 1, spread: 1, fire: 0.024, size: 1.21 },
+    /*  5 散射⭐ */ { name: '扇面射手', foes: 1, spd: 0.52, bspd: 1.02, cd: 1.55, turn: 0.58, react: 760, jitter: 0.330, lead: 0.16, dodge: 0.00, shield: 3, hp: 2, maxBullets: 2, spread: 2, fire: 0.026, size: 1.19 },
+    /*  6 机动⭐ */ { name: '游击兵',   foes: 1, spd: 1.10, bspd: 1.00, cd: 1.70, turn: 1.38, react: 620, jitter: 0.350, lead: 0.14, dodge: 0.46, shield: 3, hp: 2, maxBullets: 2, spread: 2, fire: 0.020, size: 1.16 },
+    /*  7 火力⭐ */ { name: '三连射',   foes: 1, spd: 0.48, bspd: 0.96, cd: 0.85, turn: 0.56, react: 700, jitter: 0.360, lead: 0.10, dodge: 0.10, shield: 2, hp: 2, maxBullets: 3, spread: 3, fire: 0.030, size: 1.13 },
+    /*  8 数量⭐ */ { name: '双车编队', foes: 2, spd: 0.52, bspd: 1.10, cd: 1.30, turn: 0.62, react: 800, jitter: 0.375, lead: 0.06, dodge: 0.04, shield: 2, hp: 2, maxBullets: 2, spread: 3, fire: 0.024, size: 1.10 },
+    /*  9 护盾⭐ */ { name: '复合装甲', foes: 2, spd: 0.52, bspd: 1.10, cd: 1.55, turn: 0.62, react: 800, jitter: 0.385, lead: 0.04, dodge: 0.02, shield: 7, hp: 5, maxBullets: 2, spread: 2, fire: 0.024, size: 1.07 },
+    /* 10 射速⭐ */ { name: '弹幕压制', foes: 2, spd: 0.52, bspd: 1.10, cd: 0.76, turn: 0.62, react: 800, jitter: 0.385, lead: 0.04, dodge: 0.02, shield: 7, hp: 5, maxBullets: 3, spread: 3, fire: 0.034, size: 1.04 },
+    /* 11 诡术⭐ */ { name: '游猎者',   foes: 2, spd: 0.52, bspd: 1.10, cd: 1.45, turn: 0.62, react: 620, jitter: 0.075, lead: 0.58, dodge: 0.62, shield: 7, hp: 4, maxBullets: 3, spread: 3, fire: 0.030, size: 1.01 },
+    /* 12 护盾⭐ */ { name: '精钢军团', foes: 2, spd: 0.52, bspd: 1.10, cd: 1.60, turn: 0.62, react: 700, jitter: 0.105, lead: 0.38, dodge: 0.32, shield: 10, hp: 7, maxBullets: 3, spread: 3, fire: 0.040, size: 0.99 },
+    /* 13 数量⭐ */ { name: '钢铁洪流', foes: 3, spd: 0.52, bspd: 1.10, cd: 1.35, turn: 0.62, react: 760, jitter: 0.195, lead: 0.20, dodge: 0.14, shield: 6, hp: 4, maxBullets: 2, spread: 3, fire: 0.028, size: 0.96 },
+    /* 14 铁壁⭐ */ { name: '装甲纵队', foes: 3, spd: 0.52, bspd: 1.10, cd: 1.45, turn: 0.62, react: 760, jitter: 0.190, lead: 0.20, dodge: 0.08, shield: 10, hp: 7, maxBullets: 2, spread: 3, fire: 0.028, size: 0.93 },
+    /* 15 终局⭐ */ { name: '最终堡垒', foes: 3, spd: 0.70, bspd: 1.62, cd: 1.35, turn: 0.86, react: 520, jitter: 0.110, lead: 0.48, dodge: 0.38, shield: 9, hp: 6, maxBullets: 4, spread: 3, fire: 0.034, size: 0.90 }
+  ];
+
+  // 返回第 n 关（1-based）的配置对象；越界自动夹到两端
+  function levelCfg(n) {
+    return LEVELS[clamp(n, 1, TOTAL_LEVELS) - 1];
+  }
+
+  // ---------- 玩家技能（每通过一关三选一）----------
+  // 设计原则：每个技能都要有「不可替代」的定位，避免出现功能重叠的选项
+  // （玩家面对两个差不多效果的技能时，选择就变成了伪选择）。
+  // ⚠️ 2026-10-16 去重：原「能量护盾」+「重装甲」合并为「装甲强化」，
+  //    原「嗜血」+「涅槃」合并为「不死鸟」—— 这 4 个原本都在做"多扛几下"，
+  //    合并后 9 个技能各有清晰定位：
+  //      输出向：散射弹幕 / 急速装填 / 穿甲弹头
+  //      生存向：装甲强化（血+盾同源）/ 不死鸟（回血+复活）
+  //      机动向：涡轮引擎
+  //      地形向：弹跳大师 / 穿墙弹
+  //      经济向：磁力吸金
+  var SKILLS = [
+    { id: 'spread',   name: '散射弹幕', icon: '⋔', maxLv: 3, desc: '每次开火多射出 1 发扇形子弹' },
+    { id: 'plating',  name: '装甲强化', icon: '🛡', maxLv: 4, desc: '血量上限 +1，每局开局额外 +1 点护盾' },
+    { id: 'bounce',   name: '弹跳大师', icon: '↻', maxLv: 3, desc: '子弹额外多反弹 1 次' },
+    { id: 'pierce',   name: '穿墙弹',   icon: '⌖', maxLv: 3, desc: '子弹可穿透钢墙（砖墙仍会炸碎），每级多穿 1 面' },
+    { id: 'rapid',    name: '急速装填', icon: '⏱', maxLv: 4, desc: '开火冷却 -13%' },
+    { id: 'turbo',    name: '涡轮引擎', icon: '⚡', maxLv: 4, desc: '移动速度 +13%' },
+    { id: 'velocity', name: '穿甲弹头', icon: '➤', maxLv: 4, desc: '子弹速度 +15%' },
+    { id: 'greed',    name: '磁力吸金', icon: '🧲', maxLv: 3, desc: '金币收益 +30%，拾取范围更大' },
+    { id: 'phoenix',  name: '不死鸟',   icon: '🔥', maxLv: 3, desc: '击毁敌方回 1 血；每关首次阵亡以 1 血复活（各 1 级起效）' }
+  ];
+
+  // ---------- 商店升级配置（只放 UI 需要的字段，数值公式统一写在 applyUpgrades）----------
+  var UPGRADES = [
+    { id: 'armor',  name: '装甲', icon: '🛡', maxLv: 4, baseCost: 120, costStep: 130, desc: '每级血量上限 +1' },
+    { id: 'speed',  name: '引擎', icon: '⚡', maxLv: 4, baseCost: 100, costStep: 110, desc: '每级移动速度 +12%' },
+    { id: 'ammo',   name: '弹夹', icon: '❚❚', maxLv: 3, baseCost: 150, costStep: 160, desc: '每级同屏多 1 组子弹' },
+    { id: 'bullet', name: '火药', icon: '➤', maxLv: 4, baseCost: 110, costStep: 120, desc: '每级弹速 +16%，2 级起多反弹 1 次' },
+    { id: 'reload', name: '装填', icon: '⏱', maxLv: 4, baseCost: 130, costStep: 140, desc: '每级开火冷却 -12%' },
+    { id: 'turn',   name: '传动', icon: '↻', maxLv: 4, baseCost: 100, costStep: 110, desc: '每级转向灵活度 +12%' }
+  ];
+
+  // ==================== DOM ====================
+  var stage = document.getElementById('stage');
+  var canvas = document.getElementById('game');
+  var ctx = canvas.getContext('2d');
+
+  var uiLevel = document.getElementById('uiLevel');
+  var uiRound = document.getElementById('uiRound');
+  var uiLife = document.getElementById('uiLife');
+  var uiLifeShield = document.getElementById('uiLifeShield');
+  var uiFoeHp = document.getElementById('uiFoeHp');
+  var uiFoeLv = document.getElementById('uiFoeLv');
+  var uiCoins = document.getElementById('uiCoins');
+
+  var btnShop = document.getElementById('btnShop');
+  var btnSound = document.getElementById('btnSound');
+  var btnBgm = document.getElementById('btnBgm');
+  var btnPause = document.getElementById('btnPause');
+  var btnHome = document.getElementById('btnHome');
+
+  var ovStart = document.getElementById('ovStart');
+  var ovPause = document.getElementById('ovPause');
+  var ovRound = document.getElementById('ovRound');
+  var ovLevel = document.getElementById('ovLevel');
+  var ovOver = document.getElementById('ovOver');
+
+  var roundTitle = document.getElementById('roundTitle');
+  var roundSub = document.getElementById('roundSub');
+  var roundScore = document.getElementById('roundScore');
+  var roundBtnRow = document.getElementById('roundBtnRow');
+
+  var lvTitle = document.getElementById('lvTitle');
+  var lvName = document.getElementById('lvName');
+  var lvBuffs = document.getElementById('lvBuffs');
+  var lvStats = document.getElementById('lvStats');
+  var lvCount = document.getElementById('lvCount');
+  var btnLevelGo = document.getElementById('btnLevelGo');
+
+  var overTitle = document.getElementById('overTitle');
+  var overSub = document.getElementById('overSub');
+  var overScore = document.getElementById('overScore');
+  var overGrade = document.getElementById('overGrade');
+  var overEarn = document.getElementById('overEarn');
+  var overBest = document.getElementById('overBest');
+
+  var btnStart = document.getElementById('btnStart');
+  var btnRestart = document.getElementById('btnRestart');
+  var btnResume = document.getElementById('btnResume');
+  var btnNextRound = document.getElementById('btnNextRound');
+  var btnLevelGo = document.getElementById('btnLevelGo');
+  var btnAgain = document.getElementById('btnAgain');
+  var btnHomePause = document.getElementById('btnHomePause');
+  var btnHomeRound = document.getElementById('btnHomeRound');
+  var btnHomeOver = document.getElementById('btnHomeOver');
+
+  // 局数选择相关（提前声明：syncRoundPickUI 在启动阶段就会被调用）
+  var roundPick = document.getElementById('roundPick');
+  var roundInput = document.getElementById('roundInput');
+  // 整体难度选择相关（同理，启动阶段就要同步 UI）
+  var diffPick = document.getElementById('diffPick');
+  var diffHint = document.getElementById('diffHint');
+  // 背景音量滑杆
+  var bgmVol = document.getElementById('bgmVol');
+  var bgmVolNum = document.getElementById('bgmVolNum');
+  // 草丛隐蔽提示
+  var hiddenBadge = document.getElementById('hiddenBadge');
+
+  var bestLine = document.getElementById('bestLine');
+
+  var shopPanel = document.getElementById('shopPanel');
+  var shopTitle = document.getElementById('shopTitle');
+  var shopRow = document.getElementById('shopRow');
+  var shopStats = document.getElementById('shopStats');
+  var shopCoins = document.getElementById('shopCoins');
+  var shopToast = document.getElementById('shopToast');
+  var btnShopClose = document.getElementById('btnShopClose');
+  var btnShop = document.getElementById('btnShop');
+  var prepBanner = document.getElementById('prepBanner');
+  var skillSec = document.getElementById('skillSec');
+  var skillRow = document.getElementById('skillRow');
+  var skillNote = document.getElementById('skillNote');
+  var hintText = document.getElementById('hintText');
+
+  // ==================== 状态 ====================
+  // 重要：必须在脚本启动前就把 grid 建成完整尺寸。
+  // 主循环启动后立刻会调用 draw() -> drawMap() -> grid[y][x]，
+  // 若此时 grid 还是空数组就会抛 "reading '0' of undefined"，整个渲染循环死掉。
+  var grid = [];
+  (function initGrid() {
+    for (var y = 0; y < ROWS; y++) { grid.push(new Array(COLS).fill(0)); }
+  })();
+  var player = null;
+  var foes = [];                     // AI 对手（1~3 台）
+  var bullets = [];
+  var effects = [];
+  var floats = [];
+  var dropCoins = [];
+
+  // start | brief | playing | paused | roundover | prep | over
+  var state = 'start';
+  var lastTime = 0;
+  var cell = 32;                     // 每格像素
+  var dpr = 1;
+  var shakeT = 0, shakeMag = 0;
+  var briefTimer = 0;                // 关卡简报自动开打倒计时（帧驱动）
+
+  var soundOn = true;
+  var coins = 0;                     // 本轮闯关的金币（每次重新开始闯关会清零）
+  var runCoins = 0;                  // 本次闯关累计赚取
+  var upgrades = { armor: 0, speed: 0, ammo: 0, bullet: 0, reload: 0, turn: 0 };
+  var skills = {};                   // 技能 id -> 已获得层数
+  for (var si = 0; si < SKILLS.length; si++) { skills[SKILLS[si].id] = 0; }
+
+  var bestLevel = 1;                 // 历史最高到达的关卡（持久）
+  var clearCount = 0;                // 通关次数（持久）
+
+  var levelRounds = 3;               // 每关局数（自定义）
+  var winNeed = 2;                   // 每关需赢几局
+  var levelNo = 1;                   // 当前关卡（1~15）
+  var roundInLevel = 1;              // 本关内第几局
+  var winsMe = 0, winsFoe = 0;       // 本关比分
+  var roundEarned = 0;               // 本次闯关累计赚取（用于结算展示）
+  var levelEarned = 0;               // 本关获得的金币
+  var levelPassed = 0;               // 已通过的关卡数（用于通关判定）
+  var skillChoices = [];             // 本次整备提供的 3 个技能 id
+  var skillPicked = null;            // 本次整备已选的技能 id
+  var levelSnapshot = null;          // 进入本关前的存档快照（失败重试时回滚）
+
+  // ==================== 工具 ====================
+  function rndInt(n) { return Math.floor(Math.random() * n); }
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function inBounds(cx, cy) { return cx >= 0 && cx < COLS && cy >= 0 && cy < ROWS; }
+  function len(x, y) { return Math.sqrt(x * x + y * y); }
+  function norm(x, y) {
+    var l = len(x, y);
+    if (l < 1e-9) { return { x: 0, y: 0 }; }
+    return { x: x / l, y: y / l };
+  }
+  function pct(x) { return Math.round(x * 100) + '%'; }
+  function sk(id) { return skills[id] || 0; }
+
+  // ==================== 存档 ====================
+  // 闯关模式下，金币 / 升级 / 技能都是「本轮闯关」内的资源，重新开始闯关会清零。
+  // 需要长期保留的是：历史最高关卡、通关次数、每关局数、整体难度、背景音量，
+  // 以及「跨会话续关」用的闯关存档（SAVE_KEY）。
+  function saveProgress() {
+    try {
+      localStorage.setItem(BEST_KEY, String(bestLevel));
+      localStorage.setItem(CLEAR_KEY, String(clearCount));
+      localStorage.setItem(ROUNDS_KEY, String(levelRounds));
+      localStorage.setItem(DIFF_KEY, String(clampDiff(diffIdx)));
+      localStorage.setItem(BGMVOL_KEY, String(bgmVolumePct));
+    } catch (e) { /* 隐私模式下静默失败 */ }
+    // 在整备车间里买东西 / 选技能时也顺手刷新存档，
+    // 否则玩家花完金币直接关页面，下次回来会丢掉这些强化。
+    if (prepNextLv > 0) { saveRun(prepNextLv); }
+  }
+
+  // ---------- 闯关存档（跨会话续关）----------
+  // 存档记的是「本关开始前」的状态：关卡号 + 金币 + 升级 + 技能。
+  // 重开时从这一关的第 1 局打起，所以中途赢下的那几局不计入，
+  // 也不会因为反复读档刷金币。
+  var runSave = null;
+  // 整备车间里「即将进入的下一关」。用它来给存档定位，而不是靠 levelNo+1：
+  // enterLevel 在 state 还是 'prep' 时就会跑一遍 saveProgress，
+  // 那时若按 levelNo+1 算，存档会被写到再下一关。
+  var prepNextLv = 0;
+
+  function clearRun() {
+    runSave = null;
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* 忽略 */ }
+  }
+
+  function isBlankRun(lvNo) {
+    if (lvNo > 1 || coins > 0) { return false; }
+    for (var i = 0; i < UPGRADES.length; i++) {
+      if ((upgrades[UPGRADES[i].id] || 0) > 0) { return false; }
+    }
+    for (var j = 0; j < SKILLS.length; j++) {
+      if ((skills[SKILLS[j].id] || 0) > 0) { return false; }
+    }
+    return true;
+  }
+
+  function saveRun(lvNo) {
+    var lv = clamp(lvNo, 1, TOTAL_LEVELS);
+    // 第 1 关的白板状态不值得存 —— 免得主页一上来就显示"继续第 1 关"
+    if (isBlankRun(lv)) { clearRun(); return; }
+    try {
+      var snap = {
+        v: 1,
+        lv: lv,
+        coins: coins,
+        upgrades: upgrades,
+        skills: skills,
+        t: Date.now()
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(snap));
+      // 内存里也留一份深拷贝：startRun(true) 直接拿它恢复，
+      // 不能直接引用 upgrades/skills，否则后续改动会污染存档快照。
+      runSave = {
+        lv: lv,
+        coins: coins,
+        upgrades: JSON.parse(JSON.stringify(upgrades)),
+        skills: JSON.parse(JSON.stringify(skills)),
+        t: snap.t
+      };
+    } catch (e) { /* 忽略 */ }
+  }
+
+  // 读存档并做一次体检：字段缺失 / 数值越界 / 版本不符都当场丢掉，宁可从第 1 关开始
+  function loadRun() {
+    runSave = null;
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) { return; }
+      var d = JSON.parse(raw);
+      if (!d || d.v !== 1) { return; }
+      var lv = parseInt(d.lv, 10);
+      if (!isFinite(lv) || lv < 1 || lv > TOTAL_LEVELS) { return; }
+
+      var up = {}, sks = {};
+      var i, j, k, v;
+      for (i = 0; i < UPGRADES.length; i++) {
+        k = UPGRADES[i].id;
+        v = d.upgrades ? parseInt(d.upgrades[k], 10) : 0;
+        up[k] = isFinite(v) ? clamp(v, 0, UPGRADES[i].maxLv) : 0;
+      }
+      for (j = 0; j < SKILLS.length; j++) {
+        k = SKILLS[j].id;
+        v = d.skills ? parseInt(d.skills[k], 10) : 0;
+        sks[k] = isFinite(v) ? clamp(v, 0, SKILLS[j].maxLv) : 0;
+      }
+      runSave = {
+        lv: lv,
+        coins: Math.max(0, Math.round(Number(d.coins) || 0)),
+        upgrades: up,
+        skills: sks,
+        t: d.t || 0
+      };
+    } catch (e) { runSave = null; }
+  }
+
+  function loadProgress() {
+    try {
+      var b = parseInt(localStorage.getItem(BEST_KEY), 10);
+      if (isFinite(b)) { bestLevel = clamp(b, 1, TOTAL_LEVELS); }
+      var c = parseInt(localStorage.getItem(CLEAR_KEY), 10);
+      if (isFinite(c) && c >= 0) { clearCount = c; }
+      var r = localStorage.getItem(ROUNDS_KEY);
+      if (r !== null && isFinite(parseInt(r, 10))) {
+        levelRounds = clampRounds(parseInt(r, 10));
+      }
+      var d = localStorage.getItem(DIFF_KEY);
+      if (d !== null && isFinite(parseInt(d, 10))) {
+        diffIdx = clampDiff(parseInt(d, 10));
+      }
+      // 音量档位：注意这里不能调 setBgmVolumePct（它会触发 syncBgmToState），
+      // 启动阶段只回填数值，等音频设备就绪后由 syncBgmToState 应用。
+      var v = localStorage.getItem(BGMVOL_KEY);
+      if (v !== null && isFinite(parseInt(v, 10))) {
+        bgmVolumePct = clamp(parseInt(v, 10), 0, 100);
+      }
+    } catch (e) { /* 忽略损坏的存档 */ }
+    setWinNeed();
+  }
+
+  // 难度下标归一化
+  function clampDiff(n) {
+    n = parseInt(n, 10);
+    if (!isFinite(n)) { return 1; }           // 存档坏了就回落「普通」
+    return clamp(n, 0, DIFFS.length - 1);
+  }
+
+  // 局数归一化：偶数会让"多数获胜"出现平局，故强制为奇数
+  function clampRounds(n) {
+    n = parseInt(n, 10);
+    if (!isFinite(n)) { n = 3; }
+    n = Math.round(n);
+    if (n < 1) { n = 1; }
+    if (n > 99) { n = 99; }
+    if (n % 2 === 0) { n += 1; }              // 偶数 → 上一个奇数
+    if (n > 99) { n = 99; }
+    return n;
+  }
+
+  function setWinNeed() {
+    winNeed = Math.floor(levelRounds / 2) + 1;
+  }
+
+  // 把局数同步到界面：按钮高亮 + 输入框数值
+  function syncRoundPickUI() {
+    var btns = roundPick.querySelectorAll('button');
+    var matched = false;
+    for (var i = 0; i < btns.length; i++) {
+      var match = (parseInt(btns[i].getAttribute('data-rounds'), 10) === levelRounds);
+      btns[i].classList.toggle('on', match);
+      if (match) { matched = true; }
+    }
+    if (roundInput) {
+      roundInput.value = levelRounds;
+      // 命中预设按钮时输入框不高亮，用自定义值时高亮，让玩家知道当前生效的是哪一个
+      roundInput.classList.toggle('on', !matched);
+    }
+  }
+
+  // 把整体难度同步到界面
+  function syncDiffPickUI() {
+    if (!diffPick) { return; }
+    var d = DIFFS[clampDiff(diffIdx)];
+    var btns = diffPick.querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].classList.toggle('on', btns[i].getAttribute('data-diff') === d.id);
+    }
+    if (diffHint) { diffHint.textContent = d.desc; }
+  }
+
+  function lv(id) { return upgrades[id] || 0; }
+
+  // 把音量档位回显到滑杆（存档恢复 / 拖动时都会调）
+  function syncBgmVolUI() {
+    if (bgmVol) { bgmVol.value = bgmVolumePct; }
+    if (bgmVolNum) { bgmVolNum.textContent = bgmVolumePct + '%'; }
+  }
+
+  function addCoins(n) {
+    n = Math.max(0, Math.round(n));
+    if (n <= 0) { return; }
+    coins += n;
+    runCoins += n;
+    levelEarned += n;
+    updateHUD();
+  }
+
+  // ==================== 背景音乐（外部 mp3，与音效相互独立） ====================
+  // 与音效共用「静音」的语义但开关互相独立：玩家可能只想听音乐、或只想留音效。
+  // 存放方式：与 HTML 同目录的 bgm.mp3（同目录外链，便于单独替换音乐文件）。
+  // 容错：文件不存在 / 格式不支持 / 浏览器禁止自动播放，都只是没有音乐，不影响游戏。
+  var bgmEl = null;                 // HTMLAudioElement
+  var bgmReady = false;             // 音乐文件是否成功加载
+  var bgmOn = true;                 // 玩家是否开启了背景音乐
+  var BGM_SRC = 'bgm.mp3';
+  // ⚠️ 音量基准已调低过两轮：0.42 → 0.30（首轮"背景音有点大"）
+  //    再调到 0.22（"还是偏大，会盖住开火声"）。
+  //    调这个值直接决定全局响度；普通战斗之外的场合还会再乘一个倍率。
+  var BGM_VOLUME = 0.30;            // 背景音乐压得比音效低，避免盖住开火/爆炸声
+  // 非战斗状态（整备/暂停/结算）的额外压低倍率 —— 战斗中是 1.0
+  var BGM_MUL_IDLE = 0.42;
+
+  function ensureBgm() {
+    if (bgmEl) { return; }
+    try {
+      bgmEl = new Audio();
+      bgmEl.src = BGM_SRC;
+      bgmEl.loop = true;            // 单曲循环：游戏是长时间反复重来的结构
+      bgmEl.volume = BGM_VOLUME;
+      bgmEl.preload = 'auto';
+      bgmEl.addEventListener('canplaythrough', function () { bgmReady = true; tryPlayBgm(); });
+      bgmEl.addEventListener('error', function () { bgmReady = false; });
+      bgmEl.addEventListener('loadeddata', function () { bgmReady = true; tryPlayBgm(); });
+    } catch (e) { bgmEl = null; bgmReady = false; }
+  }
+
+  // 尝试播放：浏览器普遍禁止无交互的自动播放，
+  // 所以这里只负责"在允许的前提下尽量放"，失败就静默等待下一次用户交互。
+  function tryPlayBgm() {
+    if (!bgmEl || !bgmReady || !bgmOn) { return; }
+    try {
+      var p = bgmEl.play();
+      if (p && p['catch']) { p['catch'](function () { /* 等用户首次交互后再放 */ }); }
+    } catch (e) { /* 忽略 */ }
+  }
+
+  // 整备/暂停等"思考时间"把音乐压低，回到战斗中恢复 —— 避免耳朵一直紧绷
+  function setBgmVolumeLevel(mul) {
+    if (!bgmEl) { return; }
+    try { bgmEl.volume = Math.max(0, Math.min(1, BGM_VOLUME * mul)); } catch (e) {}
+  }
+
+  // 音量滑杆：0~100 映射到 0~1，再乘基准音量。0 视作静音。
+  function setBgmVolumePct(p) {
+    p = Math.round(Number(p));
+    if (isNaN(p)) { p = 70; }
+    bgmVolumePct = Math.max(0, Math.min(100, p));
+    syncBgmToState();               // 立刻生效，不用等下一次状态切换
+    return bgmVolumePct;
+  }
+
+  function toggleBgm() {
+    bgmOn = !bgmOn;
+    if (bgmOn) {
+      ensureBgm();
+      tryPlayBgm();
+    } else if (bgmEl) {
+      try { bgmEl.pause(); } catch (e) {}
+    }
+    return bgmOn;
+  }
+
+  // 让音乐音量跟随游戏状态：战斗中正常，整备/暂停/结算时压低（保留氛围但不抢注意力）
+  function syncBgmToState() {
+    if (!bgmEl || !bgmOn) { return; }
+    // 玩家音量的档位系数（0~1）先乘进来，再按状态压低
+    var mul = bgmVolumePct / 100;
+    if (state === 'prep' || state === 'paused' || state === 'roundover' ||
+        state === 'brief' || state === 'over') { mul *= BGM_MUL_IDLE; }
+    setBgmVolumeLevel(mul);
+    // 音乐只应该在「已经开过局」之后响 —— 停留在主菜单时保持安静
+    if (state === 'start') { try { bgmEl.pause(); } catch (e) {} return; }
+    tryPlayBgm();
+  }
+
+  // ==================== 音效（WebAudio 现场合成） ====================
+  var actx = null;
+  var soundReady = false;
+
+  function ensureAudio() {
+    if (actx) {
+      if (actx.state === 'suspended') { try { actx.resume(); } catch (e) {} }
+      return;
+    }
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { soundReady = false; return; }
+      actx = new AC();
+      soundReady = true;
+    } catch (e) { soundReady = false; }
+  }
+
+  function tone(freq, dur, type, gain, delay, sweepTo) {
+    if (!soundOn || !soundReady || !actx) { return; }
+    try {
+      var t0 = actx.currentTime + (delay || 0);
+      var osc = actx.createOscillator();
+      var g = actx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, t0);
+      if (sweepTo) { osc.frequency.exponentialRampToValueAtTime(Math.max(20, sweepTo), t0 + dur); }
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.001, gain || 0.07), t0 + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g); g.connect(actx.destination);
+      osc.start(t0); osc.stop(t0 + dur + 0.03);
+    } catch (e) { /* 音频异常不影响游戏 */ }
+  }
+
+  function noise(dur, gain, filterFreq, delay) {
+    if (!soundOn || !soundReady || !actx) { return; }
+    try {
+      var t0 = actx.currentTime + (delay || 0);
+      var n = Math.floor(actx.sampleRate * dur);
+      var buf = actx.createBuffer(1, n, actx.sampleRate);
+      var data = buf.getChannelData(0);
+      for (var i = 0; i < n; i++) { data[i] = (Math.random() * 2 - 1) * (1 - i / n); }
+      var src = actx.createBufferSource();
+      src.buffer = buf;
+      var flt = actx.createBiquadFilter();
+      flt.type = 'lowpass';
+      flt.frequency.setValueAtTime(filterFreq || 900, t0);
+      var g = actx.createGain();
+      g.gain.setValueAtTime(gain || 0.16, t0);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      src.connect(flt); flt.connect(g); g.connect(actx.destination);
+      src.start(t0);
+    } catch (e) { /* 忽略 */ }
+  }
+
+  var sfx = {
+    shoot: function () { tone(620, 0.08, 'square', 0.055, 0, 260); },
+    bounce: function () { tone(880, 0.05, 'triangle', 0.045, 0, 1200); },
+    hitBrick: function () { noise(0.12, 0.14, 1400); },
+    hitSteel: function () { tone(1500, 0.05, 'square', 0.04, 0, 900); },
+    hitPlayer: function () { noise(0.3, 0.2, 700); tone(160, 0.28, 'sawtooth', 0.09, 0, 60); },
+    explode: function () { noise(0.42, 0.24, 520); tone(110, 0.4, 'sawtooth', 0.11, 0, 40); },
+    win: function () { [523, 659, 784, 1047].forEach(function (f, i) { tone(f, 0.20, 'triangle', 0.09, i * 0.11); }); },
+    lose: function () { [392, 330, 262, 196].forEach(function (f, i) { tone(f, 0.26, 'sine', 0.09, i * 0.15); }); },
+    coin: function () { tone(1180, 0.06, 'triangle', 0.06, 0); tone(1560, 0.08, 'triangle', 0.055, 0.045); },
+    buy: function () { [660, 880, 1320].forEach(function (f, i) { tone(f, 0.10, 'triangle', 0.08, i * 0.06); }); },
+    denied: function () { tone(220, 0.10, 'square', 0.06, 0); tone(180, 0.12, 'square', 0.05, 0.07); },
+    countdown: function () { tone(880, 0.09, 'sine', 0.06, 0); }
+  };
+
+  // ==================== 地图生成 ====================
+  function makeGrid() {
+    var g = [];
+    for (var y = 0; y < ROWS; y++) { g.push(new Array(COLS).fill(0)); }
+    return g;
+  }
+
+  // 1v1 地图：左右对称风格，中间有掩体，保证双方公平
+  function genStage() {
+    grid = makeGrid();
+
+    // 外框钢墙（子弹在这里反弹）
+    for (var x = 0; x < COLS; x++) { grid[0][x] = 2; grid[ROWS - 1][x] = 2; }
+    for (var y = 0; y < ROWS; y++) { grid[y][0] = 2; grid[y][COLS - 1] = 2; }
+
+    var half = COLS / 2;
+
+    // 左右两侧成对生成的掩体（镜像，保证公平）
+    var patterns = 5 + rndInt(3);
+    for (var p = 0; p < patterns; p++) {
+      var px = 2 + rndInt(half - 4);      // 只生成左半边
+      var py = 2 + rndInt(ROWS - 4);
+      var pw = 1 + rndInt(3);
+      var ph = 1 + rndInt(3);
+      var isSteel = Math.random() < 0.30;
+
+      for (var yy = py; yy < py + ph; yy++) {
+        for (var xx = px; xx < px + pw; xx++) {
+          if (!inBounds(xx, yy)) { continue; }
+          if (reserved(xx, yy)) { continue; }
+          if (Math.random() < 0.15) { continue; }
+          var v = isSteel ? 2 : 1;
+          grid[yy][xx] = v;
+          // 镜像到右半边
+          var mx = COLS - 1 - xx;
+          if (inBounds(mx, yy) && !reserved(mx, yy)) {
+            grid[yy][mx] = v;
+          }
+        }
+      }
+    }
+
+    // 中间竖向掩体带（创造反弹机会）
+    var midY = 4 + rndInt(ROWS - 8);
+    var midH = 2 + rndInt(3);
+    for (var my = midY; my < midY + midH; my++) {
+      if (!inBounds(COLS / 2, my)) { continue; }
+      grid[my][COLS / 2 - 1] = 2;
+      grid[my][COLS / 2] = 2;
+    }
+
+    // 草丛（左右镜像）
+    var grassCount = 2 + rndInt(3);
+    for (var gg = 0; gg < grassCount; gg++) {
+      var gx = 2 + rndInt(half - 3);
+      var gy = 2 + rndInt(ROWS - 4);
+      var gw = 2, gh = 2;
+      for (var y3 = gy; y3 < gy + gh; y3++) {
+        for (var x3 = gx; x3 < gx + gw; x3++) {
+          if (!inBounds(x3, y3) || reserved(x3, y3)) { continue; }
+          grid[y3][x3] = 3;
+          var mx3 = COLS - 1 - x3;
+          if (inBounds(mx3, y3) && !reserved(mx3, y3)) { grid[y3][mx3] = 3; }
+        }
+      }
+    }
+
+    // 清空四个角落的出生区（左上 = 玩家，其余三角 = 敌方）
+    clearArea(1, 1, 4, 4);
+    clearArea(COLS - 5, 1, 4, 4);
+    clearArea(1, ROWS - 5, 4, 4);
+    clearArea(COLS - 5, ROWS - 5, 4, 4);
+    // 每个出生点朝场内留出一条射击视野
+    clearArea(1, 1, 3, 6);
+    clearArea(COLS - 4, 1, 3, 6);
+    clearArea(1, ROWS - 7, 3, 6);
+    clearArea(COLS - 4, ROWS - 7, 3, 6);
+
+    // 地图变了 → 草叶缓存作废，下次绘制时重烘
+    grassLayerDirty = true;
+  }
+
+  function reserved(cx, cy) {
+    // 四个出生区保护（玩家左上，敌人另外三角）
+    if (cx <= 4 && cy <= 4) { return true; }
+    if (cx >= COLS - 5 && cy <= 4) { return true; }
+    if (cx <= 4 && cy >= ROWS - 5) { return true; }
+    if (cx >= COLS - 5 && cy >= ROWS - 5) { return true; }
+    return false;
+  }
+
+  function clearArea(cx, cy, w, h) {
+    for (var y = cy; y < cy + h; y++) {
+      for (var x = cx; x < cx + w; x++) {
+        if (inBounds(x, y) && x > 0 && y > 0 && x < COLS - 1 && y < ROWS - 1) {
+          grid[y][x] = 0;
+        }
+      }
+    }
+  }
+
+  // ==================== 实体创建 ====================
+  // 坦克：gx,gy 为中心点（浮点格坐标），朝向用角度 angle（弧度）
+  function makeTank(isPlayer, gx, gy, angle) {
+    return {
+      gx: gx, gy: gy,               // 中心点
+      r: TANK / 2,                  // 半径
+      sizeMul: 1,                   // 尺寸倍率（敌方按关卡放大，更好瞄准命中）
+      angle: angle || 0,            // 炮口朝向（弧度）
+      moveAngle: angle || 0,        // 车体朝向
+      mx: 0, my: 0,                 // 实际移动向量（世界坐标）
+      trackSpin: 0,                 // 履带转动方向（-1 / 0 / +1）
+      backing: false,               // 是否正在倒车
+      speed: 0,
+      turnRate: 2.6,                // 转向角速度（弧度/秒）
+      spread: 1,                    // 一次射出几发
+      spreadArc: SPREAD_ARC,        // 散射夹角
+      shield: 0,                    // 当前护盾
+      shieldMax: 0,                 // 护盾上限
+      shieldFlash: 0,               // 护盾受击闪光
+      hurtFlash: 0,
+      hp: BASE_HP,
+      maxHp: BASE_HP,
+      fireTimer: 0,
+      spawnAnim: 0.75,              // 出场无敌时间（秒）
+      exposeT: 0,                   // 剩余暴露时间（毫秒）：在草里开火会被枪口火光暴露
+      alive: true,
+      isPlayer: !!isPlayer,
+      color: isPlayer ? '#4ecdc4' : '#ff6b6b',
+      // AI 专用
+      aiTimer: 0,
+      aiGoal: null,
+      aiStrafe: 0,
+      aiPanic: 0
+    };
+  }
+
+  // 把「商店升级 + 技能」套用到玩家坦克属性上。
+  // 数值公式集中在这里，避免和商店 UI 的两处定义打架。
+  function applyUpgrades(t) {
+    if (!t) { return; }
+    var beforeMax = t.maxHp;
+
+    // 血量：基础 3 + 装甲每级 1 + 装甲强化技能每级 1
+    t.maxHp = BASE_HP + lv('armor') + sk('plating');
+
+    // 移动速度：引擎每级 +12%，涡轮技能每级 +13%
+    t.speed = P_SPEED * (1 + lv('speed') * 0.12) * (1 + sk('turbo') * 0.13);
+
+    // 转向灵活度：传动每级 +12%
+    t.turnRate = TURN_SPEED * 1000 * (1 + lv('turn') * 0.12);
+
+    // 散射：散射弹幕技能每级多 1 发
+    t.spread = 1 + sk('spread');
+    t.spreadArc = SPREAD_ARC;
+
+    // 同屏子弹上限 = 组数 × 每组发数
+    t.maxBullets = (1 + lv('ammo')) * t.spread;
+
+    // 弹速：火药每级 +16%，穿甲弹头技能每级 +15%
+    t.bulletSpeedMul = (1 + lv('bullet') * 0.16) * (1 + sk('velocity') * 0.15);
+
+    // 反弹次数：火药 2 级起 +1、4 级 +2；弹跳大师每级 +1
+    var bb = 0;
+    if (lv('bullet') >= 4) { bb = 2; } else if (lv('bullet') >= 2) { bb = 1; }
+    t.bounceBonus = bb + sk('bounce');
+
+    // 穿墙：穿墙弹技能每级可穿透 1 面钢墙（砖墙不受影响，照常炸碎）
+    t.pierceMax = sk('pierce');
+
+    // 开火冷却：装填每级 -12%，急速装填技能每级 ×0.87
+    t.fireCd = FIRE_CD * (1 - lv('reload') * 0.12) * Math.pow(0.87, sk('rapid'));
+
+    // 护盾：装甲强化技能每级 +1（与血量上限同源，避免两个技能功能重合）
+    // 护盾值本身只在每局开局由 initPlayer 补满，避免战斗中买东西时白送一格护盾
+    t.shieldMax = sk('plating');
+
+    // 磁力吸金 / 不死鸟（击杀回血 + 每关一次复活）
+    t.coinMul = 1 + sk('greed') * 0.30;
+    t.magnetRange = 2.2 + sk('greed') * 1.1;
+    t.leech = sk('phoenix') > 0 ? 1 : 0;
+
+    // 不死鸟的「复活机会」：只在玩家身上有意义。
+    // 统一在这里兜底 —— 无论从 initPlayer 还是整备车间学技能进来，
+    // 只要本关还没用掉复活，就把机会补上（避免"刚买的技能当场不生效"）。
+    if (t.isPlayer) {
+      if (sk('phoenix') <= 0) { t._phoenixReady = false; }
+      else if (!phoenixUsed) { t._phoenixReady = true; }
+    }
+
+    // 血量变化时补足差额（购买升级后立即生效）
+    if (t.maxHp > beforeMax) { t.hp += (t.maxHp - beforeMax); }
+    t.hp = Math.min(t.hp, t.maxHp);
+    if (t.hp <= 0) { t.hp = t.maxHp; }
+  }
+
+  function initPlayer() {
+    player = makeTank(true, 2.5, 2.5, Math.PI * 0.25);
+    player.hp = BASE_HP;
+    player.maxHp = BASE_HP;
+    applyUpgrades(player);
+    player.hp = player.maxHp;
+    player.shield = player.shieldMax;
+    // 不死鸟的复活部分：每「关」只生效一次
+    player._phoenixReady = (sk('phoenix') > 0 && !phoenixUsed);
+  }
+
+  // ==================== 敌方坦克生成 ====================
+  // 敌方的全部能力都由「当前关卡的配置」+「整体难度系数」决定，
+  // 与打的是本关第几局无关 —— 这就是"每关内坦克水平一致"。
+  function initFoes(lvNo) {
+    foes = [];
+    var cfg = levelCfg(lvNo);
+    var dCur = DIFFS[clampDiff(diffIdx)];
+    var dMul = dCur.mul;
+    var dAim = dCur.aimMul;
+    var dReact = dCur.reactMul;
+
+    // 出生点：玩家在左上，敌方优先占用右下、右上、左下
+    var spots = [
+      { x: COLS - 2.5, y: ROWS - 2.5, a: Math.PI * 1.25 },
+      { x: COLS - 2.5, y: 2.5,        a: Math.PI * 0.75 },
+      { x: 2.5,        y: ROWS - 2.5, a: Math.PI * 1.75 }
+    ];
+    var n = clamp(cfg.foes, 1, spots.length);
+
+    for (var i = 0; i < n; i++) {
+      var f = makeTank(false, spots[i].x, spots[i].y, spots[i].a);
+
+      // 敌方体型倍率：越早的关卡敌人越大 = 越好瞄准命中，降低开局挫败感；
+      // 后期略收小，把"更难打中"作为难度的一部分。
+      // 体型会同时影响碰撞、移动尝路、炮口位置与血条，是全链路生效的。
+      f.sizeMul = cfg.size || 1;
+      f.r = (TANK / 2) * f.sizeMul;
+
+      f.speed = P_SPEED * cfg.spd * dMul;
+      f.fireCd = FIRE_CD * cfg.cd / dMul;
+      f.turnRate = 2.0 * cfg.turn;
+      f.spread = cfg.spread;
+      f.spreadArc = SPREAD_ARC;
+      f.aimScatter = cfg.jitter * AIM_SCATTER * dAim;   // 每发独立散布（玩家没有这个字段 → 不受影响）
+      f.maxBullets = cfg.maxBullets * cfg.spread;
+      f.bulletSpeedMul = cfg.bspd * Math.sqrt(dMul);
+      f.bounceBonus = 0;
+
+      // 耐久按「总耐久」分配，而不是血和盾各自取整 ——
+      // 否则 2 血 + 3 盾这类小数值会被 round() 抹平：
+      // 2×0.86→2、2×1.16→2，3×0.86→3、3×1.16→3，三档永远都是 5。
+      var baseTotal = cfg.hp + cfg.shield;
+      var totalEff = Math.max(1, Math.round(baseTotal * dMul));
+      var shieldShare = baseTotal > 0 ? Math.round(totalEff * (cfg.shield / baseTotal)) : 0;
+      f.shieldMax = shieldShare;
+      f.shield = f.shieldMax;
+      f.maxHp = Math.max(1, totalEff - shieldShare);
+      f.hp = f.maxHp;
+
+      // AI 行为参数（沿用原来的 cfg 字段名，便于 updateFoe 复用）
+      f.cfg = {
+        speedMul: cfg.spd,
+        cdMul: cfg.cd,
+        reactMs: Math.round(cfg.react * dReact),
+        aimJitter: cfg.jitter,
+        leadMul: cfg.lead,
+        maxBullets: cfg.maxBullets,
+        dodgeSkill: cfg.dodge,
+        fireChance: cfg.fire
+      };
+      f.level = lvNo;
+      f.aiTimer = 0;
+      f.aiPanic = 0;
+      f.aiGoal = null;
+      f.senseTimer = 0;
+      f.sensedAngle = f.angle;
+      f.sensedPos = { x: player ? player.gx : 0, y: player ? player.gy : 0 };
+      f.hasSeen = false;      // 是否曾经看见过玩家（决定"看不见时要不要朝旧位置扫射"）
+      f.lostTimer = 0;        // 已经多久没看见玩家了（供测试/调试观察）
+
+      foes.push(f);
+    }
+  }
+
+  // 新一局 / 新一关开始时，让全部坦克立刻脱离「出场无敌」。
+  // 出场保护只服务于真实观感（避免还没看清就被打死），
+  // 但同一关的第 2、3 局必须立刻可被击中，否则 AI 也会被自己的保护期卡住不还手。
+  function endSpawnGrace() {
+    if (player) { player.spawnAnim = 0; }
+    for (var i = 0; i < foes.length; i++) { foes[i].spawnAnim = 0; }
+  }
+
+  // 还活着的敌方坦克数
+  function aliveFoeCount() {
+    var n = 0;
+    for (var i = 0; i < foes.length; i++) { if (foes[i].alive) { n++; } }
+    return n;
+  }
+
+  // ==================== 关卡强度描述（给玩家看的"增强情况"） ====================
+  function rel(cur, prev) { return prev > 0 ? (cur / prev - 1) : 0; }
+
+  // 本关相对上一关「变强了什么」——用于战前简报
+  function levelDelta(lvNo) {
+    var cur = levelCfg(lvNo);
+    var out = [];
+    if (lvNo <= 1) {
+      out.push({ icon: '🎬', text: '起始关卡 · 敌方基础配置', big: true });
+      out.push({ icon: '🎈', text: '敌方坦克体型偏大，很好瞄准命中', big: true });
+      out.push({ icon: '❤', text: '敌方只有 1 点血量，打中一下就爆' });
+      out.push({ icon: '💡', text: '先熟悉手感：A/D 转车头，W/S 前进倒退，空格开火' });
+      return out;
+    }
+    var prev = levelCfg(lvNo - 1);
+    var d;
+
+    if (cur.foes > prev.foes) {
+      out.push({ icon: '🚚', text: '敌方坦克数量 → ' + cur.foes + ' 台', big: true });
+      out.push({ icon: '⚖', text: '同时出现的敌人变多，单台性能小幅回调，总火力大幅上升' });
+    }
+    if (cur.shield > prev.shield) {
+      out.push({ icon: '🛡', text: '护盾强度 +' + (cur.shield - prev.shield) + '（本关共 ' + cur.shield + ' 点）', big: true });
+    }
+    if (cur.spread > prev.spread) {
+      out.push({ icon: '⋔', text: '一次散射 ' + cur.spread + ' 发子弹', big: true });
+    }
+    if (cur.hp > prev.hp) {
+      out.push({ icon: '❤', text: '敌方血量 +' + (cur.hp - prev.hp) + '（本关 ' + cur.hp + '）' });
+    }
+    if (cur.size < prev.size - 0.005) {
+      out.push({ icon: '🎯', text: '敌方体型收小（更难打中）', down: true });
+    }
+    if (cur.maxBullets > prev.maxBullets) {
+      out.push({ icon: '❚❚', text: '同屏子弹 +' + (cur.maxBullets - prev.maxBullets) + ' 组' });
+    }
+    d = rel(cur.spd, prev.spd);
+    if (d > 0.005) { out.push({ icon: '🚀', text: '移动速度 +' + pct(d) }); }
+    else if (d < -0.005) { out.push({ icon: '🚀', text: '单台移动速度 -' + pct(-d), down: true }); }
+    d = rel(cur.bspd, prev.bspd);
+    if (d > 0.005) { out.push({ icon: '➤', text: '子弹速度 +' + pct(d) }); }
+    else if (d < -0.005) { out.push({ icon: '➤', text: '单台子弹速度 -' + pct(-d), down: true }); }
+    d = rel(cur.cd, prev.cd);
+    if (d < -0.005) { out.push({ icon: '⏱', text: '开火间隔 -' + pct(-d) }); }
+    else if (d > 0.005) { out.push({ icon: '⏱', text: '单台开火间隔 +' + pct(d), down: true }); }
+    d = rel(cur.turn, prev.turn);
+    if (d > 0.005) { out.push({ icon: '↻', text: '转向灵活度 +' + pct(d) }); }
+    else if (d < -0.005) { out.push({ icon: '↻', text: '单台转向灵活度 -' + pct(-d), down: true }); }
+    if (cur.react < prev.react) {
+      out.push({ icon: '👁', text: '反应速度 +' + pct(prev.react / cur.react - 1) });
+    } else if (cur.react > prev.react) {
+      out.push({ icon: '👁', text: '单台反应速度 -' + pct(1 - prev.react / cur.react), down: true });
+    }
+    if (cur.jitter < prev.jitter - 1e-6) { out.push({ icon: '🎯', text: '瞄准精度提升' }); }
+    else if (cur.jitter > prev.jitter + 1e-6) { out.push({ icon: '🎯', text: '单台瞄准精度下降', down: true }); }
+    if (cur.lead > prev.lead + 1e-6) { out.push({ icon: '📈', text: '预判走位能力提升' }); }
+    else if (cur.lead < prev.lead - 1e-6) { out.push({ icon: '📈', text: '单台预判能力下降', down: true }); }
+    if (cur.dodge > prev.dodge + 1e-6) { out.push({ icon: '💨', text: '闪避能力提升' }); }
+    else if (cur.dodge < prev.dodge - 1e-6) { out.push({ icon: '💨', text: '单台闪避能力下降', down: true }); }
+    if (cur.fire > prev.fire + 1e-6) { out.push({ icon: '🔥', text: '开火更主动' }); }
+    else if (cur.fire < prev.fire - 1e-6) { out.push({ icon: '🔥', text: '单台开火更保守', down: true }); }
+    if (cur.spread < prev.spread) { out.push({ icon: '⋔', text: '单台散射发数回落', down: true }); }
+    if (!out.length) { out.push({ icon: '·', text: '强度小幅提升' }); }
+    return out;
+  }
+
+  // 本关威胁总览（一屏看完全部关键数值）
+  function levelSummary(lvNo) {
+    var c = levelCfg(lvNo);
+    var out = ['坦克 ×' + c.foes, '血量 ' + c.hp];
+    if (c.shield > 0) { out.push('护盾 ' + c.shield); }
+    if (c.spread > 1) { out.push('散射 ' + c.spread + ' 发'); }
+    out.push('体型 ' + Math.round((c.size || 1) * 100) + '%');
+    out.push('速度 ' + pct(c.spd));
+    out.push('弹速 ' + pct(c.bspd));
+    out.push('开火 ' + pct(c.cd));
+    out.push('转向 ' + pct(c.turn));
+    out.push('反应 ' + c.react + 'ms');
+    out.push('瞄准抖动 ' + c.jitter.toFixed(2));
+    out.push('闪避 ' + pct(c.dodge));
+    return out;
+  }
+
+  // ==================== 碰撞 ====================
+  // 格子是否阻挡移动
+  function blockedCell(cx, cy) {
+    if (!inBounds(cx, cy)) { return true; }
+    var v = grid[cy][cx];
+    return v === 1 || v === 2;
+  }
+
+  // 圆形坦克与格状地图的碰撞检测
+  // 返回 true 表示该位置不可站立
+  function circleBlocked(cx, cy, r) {
+    // 采样圆覆盖的格子
+    var x0 = Math.floor(cx - r), x1 = Math.floor(cx + r);
+    var y0 = Math.floor(cy - r), y1 = Math.floor(cy + r);
+    for (var y = y0; y <= y1; y++) {
+      for (var x = x0; x <= x1; x++) {
+        if (!blockedCell(x, y)) { continue; }
+        // 圆心到格子的最近点距离
+        var nx = clamp(cx, x, x + 1);
+        var ny = clamp(cy, y, y + 1);
+        var dx = cx - nx, dy = cy - ny;
+        if (dx * dx + dy * dy < r * r) { return true; }
+      }
+    }
+    return false;
+  }
+
+  // 尝试沿某方向移动，撞墙时自动"沿墙滑动"（滑动手感的关键）
+  function tryMove(t, dx, dy) {
+    var r = t.r;
+    var moved = false;
+
+    // 完整移动
+    if (!circleBlocked(t.gx + dx, t.gy + dy, r)) {
+      t.gx += dx; t.gy += dy;
+      return { moved: true, hitX: false, hitY: false };
+    }
+
+    var hitX = false, hitY = false;
+
+    // 分轴移动：先试 X
+    if (Math.abs(dx) > 1e-9) {
+      if (!circleBlocked(t.gx + dx, t.gy, r)) {
+        t.gx += dx; moved = true;
+      } else { hitX = true; }
+    }
+    // 再试 Y
+    if (Math.abs(dy) > 1e-9) {
+      if (!circleBlocked(t.gx, t.gy + dy, r)) {
+        t.gy += dy; moved = true;
+      } else { hitY = true; }
+    }
+
+    return { moved: moved, hitX: hitX, hitY: hitY };
+  }
+
+  // 防卡死：万一坦克被挤进墙里（比如被另一台坦克推开），把它推到最近的空地
+  function unstickTank(t) {
+    if (!circleBlocked(t.gx, t.gy, t.r)) { return false; }
+    // 螺旋搜索最近的合法位置
+    for (var rad = 0.12; rad <= 3.0; rad += 0.12) {
+      var samples = Math.max(8, Math.floor(rad * 16));
+      for (var i = 0; i < samples; i++) {
+        var a = (i / samples) * Math.PI * 2;
+        var nx = t.gx + Math.cos(a) * rad;
+        var ny = t.gy + Math.sin(a) * rad;
+        if (!circleBlocked(nx, ny, t.r)) {
+          t.gx = nx; t.gy = ny;
+          return true;
+        }
+      }
+    }
+    // 极端情况：找不到空地就回出生点方向
+    return false;
+  }
+
+  // 坦克之间互相阻挡（圆-圆推开）
+  function pushApart(a, b) {
+    if (!a || !b || !a.alive || !b.alive) { return; }
+    if (a.spawnAnim > 0 || b.spawnAnim > 0) { return; }
+    var dx = b.gx - a.gx, dy = b.gy - a.gy;
+    var d = len(dx, dy);
+    var minD = a.r + b.r;
+    if (d >= minD || d < 1e-6) { return; }
+    var push = (minD - d) * 0.5;
+    var ux = dx / d, uy = dy / d;
+    if (!circleBlocked(a.gx - ux * push, a.gy - uy * push, a.r)) {
+      a.gx -= ux * push; a.gy -= uy * push;
+    }
+    if (!circleBlocked(b.gx + ux * push, b.gy + uy * push, b.r)) {
+      b.gx += ux * push; b.gy += uy * push;
+    }
+  }
+
+  // 玩家 ↔ 每台敌人，以及敌人 ↔ 敌人
+  function resolveTankCollision() {
+    for (var i = 0; i < foes.length; i++) { pushApart(player, foes[i]); }
+    for (var j = 0; j < foes.length; j++) {
+      for (var k = j + 1; k < foes.length; k++) { pushApart(foes[j], foes[k]); }
+    }
+  }
+
+  // 边界兜底
+  function clampToField(t) {
+    t.gx = clamp(t.gx, 1 + t.r, COLS - 1 - t.r);
+    t.gy = clamp(t.gy, 1 + t.r, ROWS - 1 - t.r);
+  }
+
+  // ==================== 子弹 ====================
+  function fire(t) {
+    if (!t.alive || t.spawnAnim > 0) { return; }
+    if (t.fireTimer > 0) { return; }
+
+    var mine = 0;
+    for (var i = 0; i < bullets.length; i++) {
+      if (bullets[i].owner === t && bullets[i].alive) { mine++; }
+    }
+    var spread = t.spread || 1;
+    if (mine + spread > (t.maxBullets || 1)) { return; }
+
+    var spd = BULLET_SPEED * (t.bulletSpeedMul || 1);
+    var maxBounce = BOUNCE_MAX + (t.bounceBonus || 0);
+    var muzzle = t.r + BULLET_R + 0.03;
+    var arc = t.spreadArc || SPREAD_ARC;
+
+    // 炮口贴墙时不发射（防止子弹卡在墙里）
+    var hx = Math.cos(t.angle), hy = Math.sin(t.angle);
+    if (circleBlocked(t.gx + hx * muzzle, t.gy + hy * muzzle, BULLET_R * 0.9)) { return; }
+
+    // 散射：以车头方向为中心，等角铺开（spread = 1 时就是普通的单发）
+    var shotsFired = 0;               // 实际射出的子弹数（被墙挡掉的方向不算）
+    for (var s = 0; s < spread; s++) {
+      var off = spread > 1 ? (s - (spread - 1) / 2) * arc : 0;
+      var a = t.angle + off;
+      // AI 的每一发子弹各自独立散布（见文件顶部 AIM_SCATTER 的说明）。
+      // 玩家没有 aimScatter，打出去就是炮口方向，不受影响。
+      if (t.aimScatter) { a += rnd(-t.aimScatter, t.aimScatter); }
+      var dir = { x: Math.cos(a), y: Math.sin(a) };
+      var cx = t.gx + dir.x * muzzle;
+      var cy = t.gy + dir.y * muzzle;
+      // 个别方向被墙挡住就跳过这一发，其余照发
+      if (circleBlocked(cx, cy, BULLET_R * 0.9)) { continue; }
+
+      // 穿墙弹：不是每发都能穿 —— 按概率「带电」（默认五成），
+      // 带电的子弹可以穿透钢墙，且穿越时的消耗与未带电子弹一致（见 updateBullets）。
+      var pierceLeft = 0;
+      if (t.pierceMax > 0 && Math.random() < PIERCE_CHANCE) { pierceLeft = t.pierceMax; }
+
+      bullets.push({
+        x: cx, y: cy,
+        vx: dir.x * spd,
+        vy: dir.y * spd,
+        speed: spd,
+        owner: t,
+        fromPlayer: !!t.isPlayer,
+        bounces: 0,
+        maxBounce: maxBounce,
+        pierce: pierceLeft,          // 剩余可穿钢墙层数（0 = 普通子弹）
+        alive: true,
+        trail: []
+      });
+      shotsFired++;
+    }
+
+    t.fireTimer = t.fireCd || FIRE_CD;
+
+    // ---- 开火即暴露 ----
+    // 只有在草里、且确实打出了子弹才暴露（炮口顶墙没射出来就不该亮）。
+    // 暴露不改变任何伤害/命中数值，只是临时取消草丛的隐身效果 ——
+    // 让对手有机会看到火光并还击，草仍然是"伏击"而不是"无敌"。
+    if (shotsFired > 0 && inGrass(t)) { t.exposeT = EXPOSE_MS; }
+
+    sfx.shoot();
+  }
+
+  // 子弹步进 + 反弹
+  function updateBullets(dt) {
+    for (var i = bullets.length - 1; i >= 0; i--) {
+      var b = bullets[i];
+      if (!b.alive) { bullets.splice(i, 1); continue; }
+
+      var speed = len(b.vx, b.vy);
+      // 细分成小步，防止高速穿墙
+      var steps = Math.max(1, Math.ceil(speed * dt / 0.06));
+      var sdt = dt / steps;
+
+      for (var s = 0; s < steps && b.alive; s++) {
+        b.trail.push({ x: b.x, y: b.y });
+        if (b.trail.length > 5) { b.trail.shift(); }
+
+        var nx = b.x + b.vx * sdt;
+        var ny = b.y + b.vy * sdt;
+
+        // ---- 出界：外框是钢墙，所以这里其实会被下面的墙体逻辑挡住 ----
+        if (nx < 0 || nx > COLS || ny < 0 || ny > ROWS) {
+          b.alive = false;
+          addSpark(clamp(nx, 0, COLS), clamp(ny, 0, ROWS), '#ffd666');
+          break;
+        }
+
+        // ---- 分轴检测碰撞，决定反弹轴 ----
+        var hitX = false, hitY = false;
+
+        // X 轴：检查目标点所在格
+        var cxX = Math.floor(nx), cyX = Math.floor(b.y);
+        if (blockedCell(cxX, cyX)) { hitX = true; }
+
+        // Y 轴
+        var cxY = Math.floor(b.x), cyY = Math.floor(ny);
+        if (blockedCell(cxY, cyY)) { hitY = true; }
+
+        if (!hitX && !hitY) {
+          // 还要检查对角格（斜率大的时候可能斜穿墙角）
+          var cxD = Math.floor(nx), cyD = Math.floor(ny);
+          if (blockedCell(cxD, cyD)) {
+            // 判断从哪个轴撞进去更合理：比较两轴重叠深度
+            hitX = true; hitY = true;
+          } else {
+            b.x = nx; b.y = ny;
+          }
+        }
+
+        if (hitX || hitY) {
+          // 确定击中的是什么墙
+          var targetX = hitX ? Math.floor(nx) : Math.floor(b.x);
+          var targetY = hitY ? Math.floor(ny) : Math.floor(b.y);
+          var cellVal = 0;
+          if (inBounds(targetX, targetY)) { cellVal = grid[targetY][targetX]; }
+          // 对角情况取两个候选格里"更硬"的
+          if (hitX && hitY) {
+            var v1 = inBounds(Math.floor(nx), Math.floor(b.y)) ? grid[Math.floor(b.y)][Math.floor(nx)] : 0;
+            var v2 = inBounds(Math.floor(b.x), Math.floor(ny)) ? grid[Math.floor(ny)][Math.floor(b.x)] : 0;
+            cellVal = Math.max(v1, v2, cellVal);
+          }
+
+          if (cellVal === 1) {
+            // ---- 砖墙：炸碎，子弹消失 ----
+            if (inBounds(targetX, targetY) && grid[targetY][targetX] === 1) {
+              grid[targetY][targetX] = 0;
+              addBurst(targetX + 0.5, targetY + 0.5, '#c96a3e', 7);
+            }
+            b.alive = false;
+            sfx.hitBrick();
+            break;
+          }
+
+          // ---- 穿墙弹：穿透钢墙（砖墙照常炸碎，边界不可穿）----
+          // 注意：cellVal === 0 意味着撞的是「地图边界」而非某格钢墙 —— 边界永远拦住子弹，
+          // 否则子弹会飞出棋盘再也回不来，玩家会以为子弹丢了。
+          // 实现要点：不能只把子弹"往前推一点点"—— 那样它仍停在墙格内，
+          // 下一轮检测还会撞到同一面墙，白耗一层穿透标记。必须直接跳到墙的另一侧。
+          if (b.pierce > 0 && cellVal === 2 && inBounds(targetX, targetY)) {
+            b.pierce--;
+            if (hitX) {
+              // 沿 X 轴穿：把子弹放到该墙格右/左外侧
+              b.x = b.vx > 0 ? (targetX + 1 + BULLET_R * 1.35) : (targetX - BULLET_R * 1.35);
+            }
+            if (hitY) {
+              b.y = b.vy > 0 ? (targetY + 1 + BULLET_R * 1.35) : (targetY - BULLET_R * 1.35);
+            }
+            // 若落点仍在墙里（例如斜穿墙角），作废这一次穿透，交回反弹逻辑
+            if (!circleBlocked(b.x, b.y, BULLET_R * 0.5)) {
+              addSpark(b.x, b.y, '#b39dff');
+              sfx.bounce();
+              continue;
+            }
+            b.pierce++;   // 落点无效，退还穿透标记
+          }
+
+          // ---- 钢墙或边界：反弹 ----
+          if (b.bounces >= b.maxBounce) {
+            // 反弹次数用尽
+            b.alive = false;
+            addSpark(b.x, b.y, '#dfe6f2');
+            sfx.hitSteel();
+            break;
+          }
+
+          // 反弹！
+          if (hitX) { b.vx = -b.vx; }
+          if (hitY) { b.vy = -b.vy; }
+          b.bounces++;
+          // 位置回退，避免卡进墙里
+          b.x = b.x + b.vx * sdt;
+          b.y = b.y + b.vy * sdt;
+          if (circleBlocked(b.x, b.y, BULLET_R * 0.5)) {
+            // 还在墙里就再退一步
+            b.x = b.x + b.vx * sdt;
+            b.y = b.y + b.vy * sdt;
+          }
+          addSpark(b.x, b.y, '#9fe8ff');
+          sfx.bounce();
+          continue;
+        }
+
+        // ---- 打坦克 ----
+        var victim = null;
+        if (b.fromPlayer) {
+          for (var fi = 0; fi < foes.length; fi++) {
+            var ft = foes[fi];
+            if (ft.alive && ft.spawnAnim <= 0 && circleHitTank(b, ft)) { victim = ft; break; }
+          }
+        } else {
+          if (player && player.alive && player.spawnAnim <= 0 && circleHitTank(b, player)) { victim = player; }
+        }
+
+        if (victim) {
+          b.alive = false;
+          damageTank(victim, b);
+          break;
+        }
+      }
+    }
+  }
+
+  function circleHitTank(b, t) {
+    var dx = b.x - t.gx, dy = b.y - t.gy;
+    var rr = t.r + BULLET_R;
+    return dx * dx + dy * dy < rr * rr;
+  }
+
+  // ==================== 伤害 ====================
+  // 金币奖励随关卡递增（越往后打得越辛苦，赚得也越多）
+  function killReward(lvNo) { return 14 + lvNo * 4; }
+  function roundWinReward(lvNo) { return 10 + lvNo * 4; }
+  function levelClearReward(lvNo) { return 45 + lvNo * 18; }
+
+  function damageTank(t, b) {
+    if (!t.alive) { return; }
+    if (t.spawnAnim > 0) { return; }         // 出场无敌
+
+    // ---- 护盾优先承伤：护盾没破之前不掉血 ----
+    if (t.shield > 0) {
+      t.shield--;
+      t.shieldFlash = 0.30;
+      addBurst(t.gx, t.gy, '#7fd6ff', 14);
+      addSpark(t.gx, t.gy, '#bfefff');
+      addFloat(t.gx, t.gy - t.r - 0.45, '护盾 -1', '#7fd6ff');
+      shake(0.10, 3);
+      sfx.hitSteel();
+      updateHUD();
+      return;
+    }
+
+    t.hp -= 1;
+    t.hurtFlash = 0.22;
+    addBurst(t.gx, t.gy, t.color, 10);
+    shake(0.16, 4);
+    sfx.hitPlayer();
+
+    if (t.hp <= 0) {
+      // ---- 不死鸟技能：每关第一次阵亡时以 1 点血量复活 ----
+      if (t.isPlayer && t._phoenixReady) {
+        t._phoenixReady = false;
+        phoenixUsed = true;
+        t.hp = 1;
+        t.alive = true;
+        t.spawnAnim = 1.2;
+        t.exposeT = 0;          // 重生不该带着上一次的暴露余温
+        addBurst(t.gx, t.gy, '#ffd666', 26);
+        addFloat(t.gx, t.gy - t.r - 0.5, '不死鸟·重生！', '#ffd666');
+        sfx.win();
+        shake(0.30, 7);
+        updateHUD();
+        return;
+      }
+
+      t.hp = 0;
+      t.alive = false;
+      addBurst(t.gx, t.gy, t.color, 30);
+      addBurst(t.gx, t.gy, '#ffd666', 16);
+      sfx.explode();
+      shake(0.42, 10);
+
+      // 玩家阵亡 → 本局判负
+      if (t.isPlayer) { endRound('foe'); return; }
+
+      // ---- 击毁一台敌方坦克：掉金币 ----
+      var reward = killReward(levelNo);
+      for (var k = 0; k < 4; k++) {
+        dropCoins.push({
+          x: t.gx, y: t.gy,
+          vx: rnd(-0.010, 0.010), vy: rnd(-0.010, 0.010),
+          value: Math.max(3, Math.round(reward / 4)),
+          born: performance.now(), life: 12000,
+          bob: Math.random() * Math.PI * 2
+        });
+      }
+      // ---- 不死鸟（击杀回血部分）：击毁后回 1 点血 ----
+      if (player && player.alive && player.leech > 0 && player.hp < player.maxHp) {
+        player.hp = Math.min(player.maxHp, player.hp + 1);
+        addFloat(player.gx, player.gy - player.r - 0.5, '+1 HP', '#7dffa8');
+      }
+      updateHUD();
+
+      // 本关敌人全部清空 → 赢下本局
+      if (aliveFoeCount() === 0) { endRound('me'); }
+    } else {
+      updateHUD();
+    }
+  }
+
+  // ==================== AI ====================
+  function updateFoe(t, dt) {
+    if (!t.alive || t.spawnAnim > 0) { return; }
+    if (!player || !player.alive) { return; }
+
+    var cfg = t.cfg || levelCfg(levelNo);
+    t.aiTimer -= dt;
+    t.aiPanic = Math.max(0, t.aiPanic - dt);
+    t.senseTimer -= dt;
+
+    // ---- 0) 感知更新 ----
+    // AI 不是每帧都精确知道玩家位置，而是每隔 reactMs 刷新一次"认知"
+    var trueDist = len(player.gx - t.gx, player.gy - t.gy);
+    // 草丛藏身：玩家躲在草里时 AI 看不见 —— 此时不刷新认知，
+    // 继续沿用「最后已知位置」去瞄准/扫射，表现成"朝着你刚才消失的地方乱打"。
+    var seen = canSee(t, player);
+    if (t.senseTimer <= 0) {
+      t.senseTimer = cfg.reactMs;
+      if (seen) {
+        // 认知位置 = 真实位置 + 预判 + 误差
+        var lead = 0;
+        var pmv = norm(player.mx, player.my);
+        if (pmv.x || pmv.y) {
+          lead = Math.min(trueDist * 0.22, 1.1) * cfg.leadMul;
+        }
+        var senseX = player.gx + pmv.x * lead;
+        var senseY = player.gy + pmv.y * lead;
+        // 瞄准角度加入随机误差（只占很小一份，主要误差留给每一发子弹出膛时另抽，
+        // 否则整段时间共享同一个偏差，会打出"连续全空 / 连续全中"的极端节奏）
+        var baseAngle = Math.atan2(senseY - t.gy, senseX - t.gx);
+        t.sensedAngle = baseAngle + rnd(-cfg.aimJitter, cfg.aimJitter) * AIM_WOBBLE;
+        t.sensedPos = { x: player.gx + pmv.x * lead, y: player.gy + pmv.y * lead };
+        t.hasSeen = true;
+        t.lostTimer = 0;
+      } else {
+        // 看不见：认知不更新（sensedPos/sensedAngle 保留上次的值）
+        t.lostTimer = (t.lostTimer || 0) + cfg.reactMs;
+      }
+    }
+
+    var dx = t.sensedPos.x - t.gx, dy = t.sensedPos.y - t.gy;
+    // 走位依据：看得见就用真实坐标；看不见就退回到"最后已知位置"。
+    // ⚠️ 这里必须跟着 seen 走 —— 否则 AI 虽然不开火，却仍会精准地贴着你移动，
+    //    玩家会立刻感觉"草根本没用"（这正是本次要修的毛病）。
+    var walkX = seen ? player.gx : t.sensedPos.x;
+    var walkY = seen ? player.gy : t.sensedPos.y;
+    var distToPlayer = len(walkX - t.gx, walkY - t.gy);
+    var toPlayer = norm(walkX - t.gx, walkY - t.gy);
+
+    // ---- 1) 转炮口（灵活度由关卡配置决定）----
+    var turnSpeed = (t.turnRate || 2.6) * dt / 1000;
+    t.angle += clamp(angleDiff(t.sensedAngle, t.angle), -turnSpeed, turnSpeed);
+
+    // ---- 2) 开火判定 ----
+    var clear = lineOfSight(t.gx, t.gy, player.gx, player.gy);
+    var aimErr = Math.abs(angleDiff(t.sensedAngle, t.angle));
+
+    if (seen && distToPlayer < 13) {
+      // 看得见：炮口基本对准才开火，且受 fireChance 限制（不是每帧都射）
+      if (aimErr < 0.10 && t.fireTimer <= 0) {
+        if (Math.random() < cfg.fireChance * 3) { fire(t); }
+      }
+    } else if (!seen && t.hasSeen && t.fireTimer <= 0) {
+      // 看不见但知道玩家刚才在哪：朝那个位置"扫一枪"试探。
+      // 概率刻意压得很低 —— 草丛应该是可靠掩护，而不是随机吃子弹。
+      if (aimErr < 0.14 && Math.random() < 0.012) { fire(t); }
+    } else if (!clear) {
+      // 目标被墙挡住：只有预判能力较强的 AI 才有意识打反弹（且概率很低）
+      if (cfg.leadMul >= 0.30 && aimErr < 0.07) {
+        if (Math.random() < 0.01 * cfg.leadMul) { fire(t); }
+      }
+    }
+
+    // ---- 3) 躲子弹（按 dodgeSkill 决定是否察觉 + 反应） ----
+    var danger = null, dangerDist = 999;
+    if (Math.random() < cfg.dodgeSkill) {      // 能力越低，越可能"没注意到"
+      for (var i = 0; i < bullets.length; i++) {
+        var bl = bullets[i];
+        if (!bl.fromPlayer || !bl.alive) { continue; }
+        var bx = t.gx - bl.x, by = t.gy - bl.y;
+        var bd = len(bx, by);
+        if (bd > 5.5 || bd < 0.2) { continue; }
+        var bv = norm(bl.vx, bl.vy);
+        var toward = (bx * bv.x + by * bv.y) / (bd || 1);
+        if (toward > 0.90 && bd < dangerDist) { danger = bl; dangerDist = bd; }
+      }
+    }
+
+    var moveVec = { x: 0, y: 0 };
+    var probeLen = t.r + 0.30;
+
+    if (danger) {
+      // 垂直于子弹来向闪避
+      var bv2 = norm(danger.vx, danger.vy);
+      var perp = { x: -bv2.y, y: bv2.x };
+      if (circleBlocked(t.gx + perp.x * 0.6, t.gy + perp.y * 0.6, t.r)) {
+        perp.x = -perp.x; perp.y = -perp.y;
+      }
+      moveVec = perp;
+      t.aiPanic = 320;
+    } else {
+      // ---- 4) 常规走位 ----
+      if (t.aiTimer <= 0 || !t.aiGoal) {
+        t.aiTimer = rnd(700, 1500);
+        var desire;
+        if (distToPlayer < 4.0) {
+          desire = { x: -toPlayer.x, y: -toPlayer.y };        // 太近，后撤
+        } else if (distToPlayer > 10) {
+          desire = { x: toPlayer.x, y: toPlayer.y };          // 太远，靠近
+        } else {
+          t.aiStrafe = t.aiStrafe || (Math.random() < 0.5 ? 1 : -1);
+          if (Math.random() < 0.25) { t.aiStrafe = -t.aiStrafe; }
+          desire = { x: -toPlayer.y * t.aiStrafe, y: toPlayer.x * t.aiStrafe };
+        }
+        desire.x += rnd(-0.40, 0.40);
+        desire.y += rnd(-0.40, 0.40);
+        t.aiGoal = norm(desire.x, desire.y);
+      }
+      moveVec = t.aiGoal || { x: 0, y: 0 };
+
+      // 前方被挡 → 换一个能走的方向，并且**锁定一小段时间**
+      // ⚠️ 2026-10-17 修正「原地不动 + 车体左右迅速摇摆」：
+      //    旧代码在这里把 aiTimer 清零、aiGoal 置空，于是**下一帧又重抽一次目标**；
+      //    而重抽出来的方向带随机扰动，仍然朝着玩家（也就是仍然顶着墙），
+      //    于是每帧都要重新找一次替代方向 —— 替代方向在墙的左右两侧来回跳，
+      //    车体跟着一秒内左右甩几十次，位置却几乎不动。
+      //    现在：找到的方向直接写回 aiGoal 并给它 0.5~1 秒的存活时间，
+      //    这段时间内它只会顺着这个方向走，不会跟自己对冲。
+      if (moveVec.x || moveVec.y) {
+        if (circleBlocked(t.gx + moveVec.x * probeLen, t.gy + moveVec.y * probeLen, t.r)) {
+          var esc = pickEscapeDir(t, moveVec, probeLen);
+          if (esc) {
+            moveVec = esc;
+            t.aiGoal = esc;
+            t.aiTimer = rnd(500, 1000);
+          } else {
+            moveVec = { x: -moveVec.x, y: -moveVec.y };  // 四面皆墙：干脆反着开
+            t.aiGoal = null;
+            t.aiTimer = 0;
+          }
+        }
+      }
+    }
+
+    // ---- 执行移动 ----
+    if (moveVec.x || moveVec.y) {
+      var mv = norm(moveVec.x, moveVec.y);
+      var spd = t.speed * (t.aiPanic > 0 ? 1.25 : 1) * dt;
+      var bx = t.gx, by = t.gy;
+      tryMove(t, mv.x * spd, mv.y * spd);
+      var moved = Math.sqrt((t.gx - bx) * (t.gx - bx) + (t.gy - by) * (t.gy - by));
+
+      // 车体朝向平滑跟随（见 HULL_TURN_RATE 的说明）
+      steerHull(t, Math.atan2(mv.y, mv.x), dt);
+
+      // 卡死判定：想走却几乎没挪动（贴墙 / 被另一台坦克顶住）。
+      // 连续两帧都不动就换方向并锁定 —— 否则下一帧又抽回原方向，
+      // 车体就会在原地左右甩（玩家看到的就是"原地抽搐"）。
+      if (moved < spd * 0.35) { t.stuckMs = (t.stuckMs || 0) + dt; }
+      else { t.stuckMs = 0; }
+
+      if (t.stuckMs >= 32) {
+        t.stuckMs = 0;
+        var esc2 = pickEscapeDir(t, mv, probeLen);
+        // 找不到空位就贴着墙侧向走一步，别再往墙里怼
+        t.aiGoal = esc2 || { x: -mv.y, y: mv.x };
+        t.aiTimer = rnd(550, 1100);
+      }
+    } else {
+      t.stuckMs = 0;
+    }
+
+    clampToField(t);
+  }
+
+  // 车体朝向按最大角速度转向目标（只影响观感，不影响移动/射击）
+  function steerHull(t, targetAngle, dt) {
+    var cur = t.moveAngle || 0;
+    var maxStep = HULL_TURN_RATE * dt / 1000;
+    t.moveAngle = cur + clamp(angleDiff(targetAngle, cur), -maxStep, maxStep);
+  }
+
+  // 从「被挡住的方向」出发，找一个真正走得通的方向。
+  // 从小角度偏转开始试（尽量贴着墙滑），最后才考虑反向；
+  // 返回单位向量，全被堵住则返回 null。
+  function pickEscapeDir(t, dir, probe) {
+    if (!dir || (!dir.x && !dir.y)) { return null; }
+    var baseA = Math.atan2(dir.y, dir.x);
+    var tried = [0.5, -0.5, 0.95, -0.95, 1.5, -1.5, 2.2, -2.2, 2.9, -2.9];
+    for (var i = 0; i < tried.length; i++) {
+      var a = baseA + tried[i];
+      var nx = Math.cos(a), ny = Math.sin(a);
+      if (!circleBlocked(t.gx + nx * probe, t.gy + ny * probe, t.r)) {
+        return { x: nx, y: ny };
+      }
+    }
+    return null;
+  }
+
+  // 两角之间的最小夹角差
+  function angleDiff(target, cur) {
+    var d = target - cur;
+    while (d > Math.PI) { d -= Math.PI * 2; }
+    while (d < -Math.PI) { d += Math.PI * 2; }
+    return d;
+  }
+
+  // 视线检测（Bresenham 简化版：沿直线采样）
+  function lineOfSight(x0, y0, x1, y1) {
+    var dx = x1 - x0, dy = y1 - y0;
+    var d = len(dx, dy);
+    if (d < 1e-6) { return true; }
+    var steps = Math.ceil(d / 0.20);
+    for (var i = 1; i < steps; i++) {
+      var tt = i / steps;
+      var px = x0 + dx * tt, py = y0 + dy * tt;
+      var cx = Math.floor(px), cy = Math.floor(py);
+      if (blockedCell(cx, cy)) { return false; }
+    }
+    return true;
+  }
+
+  // ==================== 草丛藏身 ====================
+  // 规则：谁站在草里，谁就不被对方看见。
+  //   ① 草丛本身不阻挡视线、不阻挡子弹、不阻挡移动 —— 它只负责"藏人"。
+  //   ② 例外：贴得极近（≤ GRASS_REVEAL_DIST 格）时草藏不住，避免蹲草无敌。
+  //   ③ 双方规则完全一致，敌人在草里玩家同样看不见。
+  //   ④ 开火即暴露：在草里开枪，枪口火光会把位置暴露 EXPOSE_MS 毫秒。
+  //      没有这一条，躲在草里就能单向打黑枪 —— 玩家会觉得自己被无从招架地阴死。
+  var GRASS_REVEAL_DIST = 1.9;      // 贴脸距离：这么近就算在草里也会被发现
+  var EXPOSE_MS = 1000;             // 草里开火后的暴露时长（毫秒）
+
+  // 是否因为「刚开过火」而处于暴露状态
+  function isExposed(t) {
+    return !!(t && t.alive && t.exposeT > 0);
+  }
+
+  // 取某坐格的地形值（越界返回 0）
+  function terrainAt(gx, gy) {
+    var cx = Math.floor(gx), cy = Math.floor(gy);
+    if (!inBounds(cx, cy)) { return 0; }
+    return grid[cy][cx];
+  }
+
+  // 该坦克是否正站在草丛里
+  function inGrass(t) {
+    if (!t || !t.alive) { return false; }
+    return terrainAt(t.gx, t.gy) === 3;
+  }
+
+  // observer 能否看见 target：草丛藏身优先于视线判定
+  function canSee(observer, target) {
+    if (!observer || !target || !target.alive || !observer.alive) { return false; }
+    var d = len(target.gx - observer.gx, target.gy - observer.gy);
+    // 目标藏在草里，且没贴到脸上 → 看不见。
+    // 例外：刚开过火（exposeT > 0）→ 枪口火光把位置暴露了，草藏不住。
+    if (inGrass(target) && d > GRASS_REVEAL_DIST && !isExposed(target)) { return false; }
+    return lineOfSight(observer.gx, observer.gy, target.gx, target.gy);
+  }
+
+
+  // ==================== 效果 ====================
+  function addBurst(x, y, color, n) {
+    for (var i = 0; i < n; i++) {
+      var a = Math.random() * Math.PI * 2;
+      var sp = rnd(0.0006, 0.0035);
+      effects.push({
+        x: x, y: y,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+        life: rnd(280, 700), max: 700,
+        color: color, size: rnd(1.5, 4.2), type: 'spark'
+      });
+    }
+  }
+
+  function addSpark(x, y, color) {
+    for (var i = 0; i < 5; i++) {
+      var a = Math.random() * Math.PI * 2;
+      var sp = rnd(0.0008, 0.0028);
+      effects.push({
+        x: x, y: y,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+        life: rnd(160, 380), max: 380,
+        color: color, size: rnd(1, 2.6), type: 'spark'
+      });
+    }
+  }
+
+  function addFloat(x, y, text, color) {
+    floats.push({ x: x, y: y, text: text, color: color, life: 900, max: 900 });
+  }
+
+  function shake(t, mag) { shakeT = Math.max(shakeT, t); shakeMag = Math.max(shakeMag, mag); }
+
+  function updateEffects(dt) {
+    for (var i = effects.length - 1; i >= 0; i--) {
+      var e = effects[i];
+      e.life -= dt;
+      if (e.life <= 0) { effects.splice(i, 1); continue; }
+      e.x += e.vx * dt;
+      e.y += e.vy * dt;
+      e.vx *= 0.985;
+      e.vy *= 0.985;
+    }
+    for (var j = floats.length - 1; j >= 0; j--) {
+      var f = floats[j];
+      f.life -= dt;
+      if (f.life <= 0) { floats.splice(j, 1); continue; }
+      f.y -= 0.0012 * dt;
+    }
+  }
+
+  // ==================== 金币 ====================
+  function updateCoins(dt) {
+    if (!player || !player.alive) { return; }
+    for (var i = dropCoins.length - 1; i >= 0; i--) {
+      var c = dropCoins[i];
+      c.life -= dt;
+      if (c.life <= 0) { dropCoins.splice(i, 1); continue; }
+
+      // 物理衰减
+      c.x += c.vx * dt;
+      c.y += c.vy * dt;
+      c.vx *= 0.94;
+      c.vy *= 0.94;
+
+      var dx = player.gx - c.x, dy = player.gy - c.y;
+      var d = len(dx, dy);
+
+      // 磁吸（磁力吸金技能会显著加大吸取范围）
+      var mag = player.magnetRange || 2.2;
+      if (d < mag && d > 1e-4) {
+        var pull = 0.00022 * dt * (mag - d);
+        c.x += dx / d * pull;
+        c.y += dy / d * pull;
+      }
+      // 拾取
+      if (d < player.r + 0.16) {
+        var got = Math.max(1, Math.round(c.value * (player.coinMul || 1)));
+        addCoins(got);
+        addFloat(c.x, c.y, '+' + got, '#ffd666');
+        sfx.coin();
+        dropCoins.splice(i, 1);
+      }
+    }
+  }
+
+  // ==================== 绘制 ====================
+  // 不依赖 CSS aspect-ratio：自己算一个正方形边长，同时设给 stage 高度和 canvas 尺寸
+  function resize() {
+    // 目标：战斗区尽量占满可用空间，同时保证「正方形 + 竖向不溢出屏幕」。
+    var availW = stage.clientWidth || stage.getBoundingClientRect().width || 0;
+    if (!availW || availW < 40) {
+      // 布局还没就绪时按视口估算（两侧各留 14px 内边距）
+      availW = Math.max(240, (window.innerWidth || 640) - 28);
+    }
+
+    // 竖向可用高度：视口高度 - 顶部标题/HUD - 内边距 - 预留呼吸空间。
+    // 这样在笔记本上不会因为战斗区太高而把 HUD 挤出屏幕，需要滚动才能看全。
+    var vh = window.innerHeight || 800;
+    var chromeH = 190;                                  // 标题栏 + HUD + 内边距的估算高度
+    var availH = Math.max(320, vh - chromeH);
+
+    // 上限 920px：超宽屏（2K/4K）上不让战斗区无限拉大，避免坦克显得过于空旷
+    var MAX_SIDE = 920;
+    var size = Math.floor(Math.min(availW, availH, MAX_SIDE));
+    if (size < 280) { size = 280; }                     // 极窄窗口下的可玩下限
+
+    // 显式设置舞台高度（CSS 不再依赖 aspect-ratio）
+    stage.style.height = size + 'px';
+
+    dpr = window.devicePixelRatio || 1;
+    if (dpr > 2) { dpr = 2; }                 // 限制像素比，避免超高分屏画布过大
+    canvas.width = Math.floor(size * dpr);
+    canvas.height = Math.floor(size * dpr);
+    canvas.style.width = size + 'px';
+    canvas.style.height = size + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cell = size / COLS;
+    // 格子尺寸变了，草叶缓存必须重烘（否则草会糊成一片或错位）
+    grassLayerDirty = true;
+  }
+
+  function px(g) { return g * cell; }
+
+  function drawGrid() {
+    ctx.fillStyle = '#0c0f16';
+    ctx.fillRect(0, 0, COLS * cell, ROWS * cell);
+
+    // 地砖纹理
+    ctx.strokeStyle = 'rgba(255,255,255,.028)';
+    ctx.lineWidth = 1;
+    for (var i = 0; i <= COLS; i++) {
+      ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, ROWS * cell); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, i * cell); ctx.lineTo(COLS * cell, i * cell); ctx.stroke();
+    }
+  }
+
+  function drawBrick(x, y) {
+    var X = px(x), Y = px(y), S = cell;
+    ctx.fillStyle = '#c96a3e';
+    ctx.fillRect(X, Y, S, S);
+    ctx.fillStyle = 'rgba(0,0,0,.20)';
+    // 砖缝
+    ctx.fillRect(X, Y + S * 0.46, S, S * 0.08);
+    ctx.fillRect(X + S * 0.46, Y, S * 0.08, S * 0.46);
+    ctx.fillRect(X + S * 0.20, Y + S * 0.54, S * 0.08, S * 0.46);
+    ctx.fillRect(X + S * 0.72, Y + S * 0.54, S * 0.08, S * 0.46);
+    ctx.fillStyle = 'rgba(255,255,255,.09)';
+    ctx.fillRect(X, Y, S, 2);
+  }
+
+  function drawSteel(x, y) {
+    var X = px(x), Y = px(y), S = cell;
+    var g = ctx.createLinearGradient(X, Y, X + S, Y + S);
+    g.addColorStop(0, '#cfd6e2');
+    g.addColorStop(0.5, '#9aa3b4');
+    g.addColorStop(1, '#7d8698');
+    ctx.fillStyle = g;
+    ctx.fillRect(X, Y, S, S);
+    ctx.strokeStyle = 'rgba(255,255,255,.30)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(X + 1.5, Y + 1.5, S - 3, S - 3);
+    // 中心铆钉
+    ctx.fillStyle = 'rgba(255,255,255,.22)';
+    ctx.beginPath();
+    ctx.arc(X + S / 2, Y + S / 2, S * 0.10, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // 草丛第一层（底色）：画在坦克下面，负责"这是一块草地"
+  function drawGrassBase(x, y) {
+    var X = px(x), Y = px(y), S = cell;
+    ctx.fillStyle = 'rgba(52,120,70,.92)';
+    ctx.fillRect(X, Y, S, S);
+    // 深浅斑块，避免一整格死板
+    ctx.fillStyle = 'rgba(74,157,92,.55)';
+    ctx.fillRect(X + S * 0.08, Y + S * 0.10, S * 0.42, S * 0.40);
+    ctx.fillRect(X + S * 0.52, Y + S * 0.50, S * 0.40, S * 0.42);
+  }
+
+  // 草丛第二层（草叶）：画在坦克上面，负责"把里面的人遮住"。
+  // 性能：草叶是几百条曲线，逐帧画会明显掉帧 —— 改为烘焙到离屏画布，每帧只贴一次图。
+  var grassLayer = null;          // 离屏 canvas（与主画布同尺寸）
+  var grassLayerDirty = true;     // 需要重烘（地图变了 / 格子尺寸变了）
+
+  function bakeGrassLayer() {
+    if (!grid || !grid.length || !cell) { return; }
+    var W = Math.ceil(cell * COLS), H = Math.ceil(cell * ROWS);
+    if (!(W > 0) || !(H > 0)) { return; }
+    try {
+      if (!grassLayer) { grassLayer = document.createElement('canvas'); }
+      if (grassLayer.width !== W || grassLayer.height !== H) {
+        grassLayer.width = W;
+        grassLayer.height = H;
+      }
+      var g2 = grassLayer.getContext('2d');
+      // 极端环境下（离屏画布被禁）宁可没有草叶层，也不能让整个画面崩掉
+      if (!g2) { grassLayer = null; grassLayerDirty = false; return; }
+
+      g2.clearRect(0, 0, W, H);
+
+      for (var y = 0; y < ROWS; y++) {
+        var row = grid[y];
+        if (!row) { continue; }
+        for (var x = 0; x < COLS; x++) {
+          if (row[x] !== 3) { continue; }
+          paintGrassBlades(g2, x, y);
+        }
+      }
+      grassLayerDirty = false;
+    } catch (e) {
+      grassLayer = null;
+      grassLayerDirty = false;
+    }
+  }
+
+  // 把一格草叶画到任意 2D 上下文（烘焙时用离屏 ctx，不再直接画主画布）
+  function paintGrassBlades(g2, x, y) {
+    var X = x * cell, Y = y * cell, S = cell;
+    var seed = (x * 73856093) ^ (y * 19349663);
+    var rndG = function (i) {
+      var n = Math.sin(seed + i * 127.1) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    var BLADES = 12;
+    for (var i = 0; i < BLADES; i++) {
+      var bx = X + rndG(i * 3) * S;
+      var by = Y + rndG(i * 3 + 1) * S;
+      var len = S * (0.24 + rndG(i * 3 + 2) * 0.20);
+      var lean = (rndG(i * 3 + 5) - 0.5) * S * 0.16;
+      var tone = rndG(i * 3 + 7);
+      g2.strokeStyle = tone > 0.55
+        ? 'rgba(94,182,110,.94)'
+        : (tone > 0.25 ? 'rgba(66,150,86,.96)' : 'rgba(44,116,64,.97)');
+      g2.lineWidth = Math.max(1.1, S * 0.075);
+      g2.lineCap = 'round';
+      g2.beginPath();
+      g2.moveTo(bx, by + len * 0.45);
+      g2.quadraticCurveTo(bx + lean * 0.5, by, bx + lean, by - len * 0.55);
+      g2.stroke();
+    }
+    // 顶部一层薄雾，让被盖住的轮廓更模糊
+    g2.fillStyle = 'rgba(52,120,70,.16)';
+    g2.fillRect(X, Y, S, S);
+  }
+
+  // 草丛第二层：盖在坦克上方，让藏在草里的坦克真正被"遮住"
+  function drawGrassOverlay() {
+    if (!grid || !grid.length) { return; }
+    if (grassLayerDirty || !grassLayer) { bakeGrassLayer(); }
+    if (!grassLayer || !grassLayer.width) { return; }
+    try { ctx.drawImage(grassLayer, 0, 0); } catch (e) { /* 忽略：只是少一层草叶 */ }
+  }
+
+  // 开火即暴露 · 视觉层
+  // 判定上 canSee 已经会因为 exposeT 放行，但画面上坦克还压在草叶底下 ——
+  // 如果只改判定不改画面，玩家会觉得"我明明看不见它，它却在打我"。
+  // 所以这里把刚开过火的目标重新画到草叶层之上，并加一圈橙色火光，随计时淡出。
+  function drawExposeHighlights() {
+    if (state !== 'playing') { return; }
+    var list = [];
+    if (player && player.alive && inGrass(player) && isExposed(player)) { list.push(player); }
+    for (var i = 0; i < foes.length; i++) {
+      var f = foes[i];
+      if (f && f.alive && inGrass(f) && isExposed(f)) { list.push(f); }
+    }
+    if (!list.length) { return; }
+
+    for (var j = 0; j < list.length; j++) {
+      var t = list[j];
+      var k = clamp(t.exposeT / EXPOSE_MS, 0, 1);    // 1 → 0 线性淡出
+      var X = px(t.gx), Y = px(t.gy), R = px(t.r);
+
+      // 枪口火光晕（橙色，越接近开火瞬间越亮）
+      if (ctx.createRadialGradient) {
+        var g = ctx.createRadialGradient(X, Y, R * 0.15, X, Y, R * 2.7);
+        g.addColorStop(0, 'rgba(255,226,160,' + (0.40 * k).toFixed(3) + ')');
+        g.addColorStop(0.5, 'rgba(255,158,70,' + (0.22 * k).toFixed(3) + ')');
+        g.addColorStop(1, 'rgba(255,140,50,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(X, Y, R * 2.7, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = 'rgba(255,180,90,' + (0.18 * k).toFixed(3) + ')';
+        ctx.beginPath();
+        ctx.arc(X, Y, R * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 坦克本体重绘到草叶之上：越靠近开火瞬间越实，接近结束时又淡回草里
+      drawTank(t, 0.45 + 0.55 * k);
+    }
+  }
+
+  function drawMap() {
+    if (!grid || !grid.length) { return; }
+    for (var y = 0; y < ROWS; y++) {
+      var row = grid[y];
+      if (!row) { continue; }
+      for (var x = 0; x < COLS; x++) {
+        var v = row[x];
+        if (v === 1) { drawBrick(x, y); }
+        else if (v === 2) { drawSteel(x, y); }
+        // 草丛只画底色，草叶留到坦克之后画（见 drawGrassOverlay），
+        // 否则坦克会盖在草上面，"藏在草里"看起来就完全不像藏。
+        else if (v === 3) { drawGrassBase(x, y); }
+      }
+    }
+  }
+
+  // 卡通圆润风坦克
+  // alphaMul：整体透明度倍率（玩家在草丛里时用，表示"自己被草盖住"）
+  function drawTank(t, alphaMul) {
+    if (!t.alive) { return; }
+    var baseAlpha = (typeof alphaMul === 'number') ? alphaMul : 1;
+    var X = px(t.gx), Y = px(t.gy);
+    var R = px(t.r);
+
+    ctx.save();
+    ctx.translate(X, Y);
+    ctx.globalAlpha = baseAlpha;
+
+    // 出场无敌：闪烁
+    if (t.spawnAnim > 0) {
+      t.spawnAnim = Math.max(0, t.spawnAnim);
+      var blink = Math.sin(performance.now() * 0.02) > 0;
+      ctx.globalAlpha = baseAlpha * (blink ? 0.5 : 0.95);
+    }
+
+    // 无敌光环
+    if (t.spawnAnim > 0) {
+      ctx.strokeStyle = 'rgba(255,214,102,.75)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 1.32, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // 护盾光环（护盾没破时一直亮着，被打中会亮闪一下）—— 护盾来自「装甲强化」技能
+    if (t.shield > 0 || t.shieldFlash > 0) {
+      var pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.005);
+      var lit = t.shieldFlash > 0 ? 1 : 0;
+      ctx.save();
+      ctx.globalAlpha = 0.20 + pulse * 0.18 + lit * 0.45;
+      ctx.fillStyle = '#7fd6ff';
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 1.24, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.55 + pulse * 0.25 + lit * 0.40;
+      ctx.strokeStyle = lit > 0 ? '#ffffff' : '#7fd6ff';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 1.24, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 阴影
+    ctx.fillStyle = 'rgba(0,0,0,.32)';
+    ctx.beginPath();
+    ctx.ellipse(2, 3, R * 0.98, R * 0.92, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 车体（旋转到移动朝向）
+    ctx.save();
+    ctx.rotate(t.moveAngle || 0);
+
+    // 履带（左右两条）
+    ctx.fillStyle = shade(t.color, -0.46);
+    roundRect(-R * 0.98, -R * 0.98, R * 0.42, R * 1.96, R * 0.20); ctx.fill();
+    roundRect(R * 0.56, -R * 0.98, R * 0.42, R * 1.96, R * 0.20); ctx.fill();
+
+    // 履带纹路（带滚动偏移：车体转动或行进时纹路会滑动，增强"在开"的感觉）
+    ctx.fillStyle = 'rgba(0,0,0,.32)';
+    var tread = t.treadPhase || 0;
+    for (var i = -2; i <= 2; i++) {
+      var oy = ((i * R * 0.36 + tread) % (R * 1.8) + R * 1.8) % (R * 1.8) - R * 0.9;
+      ctx.fillRect(-R * 0.98, oy - R * 0.06, R * 0.42, R * 0.12);
+      ctx.fillRect(R * 0.56, oy - R * 0.06, R * 0.42, R * 0.12);
+    }
+    if (t.backing) {
+      ctx.fillStyle = 'rgba(255,225,120,.55)';       // 倒车提示灯
+      roundRect(-R * 0.30, R * 0.62, R * 0.60, R * 0.20, R * 0.08); ctx.fill();
+    }
+
+    // 主车体
+    var grad = ctx.createLinearGradient(-R, -R, R, R);
+    grad.addColorStop(0, shade(t.color, 0.30));
+    grad.addColorStop(0.55, t.color);
+    grad.addColorStop(1, shade(t.color, -0.25));
+    ctx.fillStyle = grad;
+    roundRect(-R * 0.72, -R * 0.80, R * 1.44, R * 1.60, R * 0.34);
+    ctx.fill();
+
+    // 车体高光
+    ctx.fillStyle = 'rgba(255,255,255,.20)';
+    roundRect(-R * 0.58, -R * 0.68, R * 1.16, R * 0.34, R * 0.17);
+    ctx.fill();
+
+    ctx.restore();
+
+    // 炮塔 + 炮管（旋转到瞄准角度）
+    ctx.save();
+    ctx.rotate(t.angle);
+
+    // 炮管（长度见文件顶部 BARREL_LEN；炮口环贴着炮管末端放）
+    var barrelTip = R * (0.30 + BARREL_LEN);
+    ctx.fillStyle = shade(t.color, -0.38);
+    roundRect(R * 0.30, -R * 0.16, R * BARREL_LEN, R * 0.32, R * 0.16);
+    ctx.fill();
+    // 炮口
+    ctx.fillStyle = shade(t.color, -0.58);
+    roundRect(barrelTip - R * 0.18, -R * 0.20, R * 0.22, R * 0.40, R * 0.10);
+    ctx.fill();
+
+    // 炮塔圆盘
+    var tg = ctx.createRadialGradient(-R * 0.16, -R * 0.20, R * 0.06, 0, 0, R * 0.62);
+    tg.addColorStop(0, shade(t.color, 0.42));
+    tg.addColorStop(1, shade(t.color, -0.16));
+    ctx.fillStyle = tg;
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 0.54, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.22)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.restore();
+
+    // 受击白闪
+    if (t.hurtFlash > 0) {
+      ctx.globalAlpha = clamp(t.hurtFlash / 0.22, 0, 1) * 0.85;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, R * 0.95, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // 玩家标记
+    if (t.isPlayer) {
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(0, -R * 1.42);
+      ctx.lineTo(-R * 0.20, -R * 1.72);
+      ctx.lineTo(R * 0.20, -R * 1.72);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function shade(hex, amt) {
+    var c = hex.replace('#', '');
+    if (c.length === 3) { c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2]; }
+    var r = parseInt(c.substr(0, 2), 16);
+    var g = parseInt(c.substr(2, 2), 16);
+    var b = parseInt(c.substr(4, 2), 16);
+    function f(v) {
+      if (amt >= 0) { return Math.round(v + (255 - v) * amt); }
+      return Math.round(v * (1 + amt));
+    }
+    return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')';
+  }
+
+  function drawBullets() {
+    for (var i = 0; i < bullets.length; i++) {
+      var b = bullets[i];
+      if (!b.alive) { continue; }
+
+      // 拖尾
+      for (var k = 0; k < b.trail.length; k++) {
+        var tr = b.trail[k];
+        var a = (k + 1) / b.trail.length * 0.42;
+        ctx.fillStyle = b.fromPlayer ? 'rgba(78,205,196,' + a + ')' : 'rgba(255,107,107,' + a + ')';
+        ctx.beginPath();
+        ctx.arc(px(tr.x), px(tr.y), px(BULLET_R) * (0.5 + a * 0.6), 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 子弹本体
+      var X = px(b.x), Y = px(b.y), R = px(BULLET_R);
+      var c1 = b.fromPlayer ? '#b8fff8' : '#ffc4c4';
+      var c2 = b.fromPlayer ? '#2aa89f' : '#d63b3b';
+      var gg = ctx.createRadialGradient(X - R * 0.3, Y - R * 0.3, R * 0.1, X, Y, R * 1.2);
+      gg.addColorStop(0, c1);
+      gg.addColorStop(1, c2);
+      ctx.fillStyle = gg;
+      ctx.beginPath();
+      ctx.arc(X, Y, R * 1.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 外发光
+      ctx.strokeStyle = b.fromPlayer ? 'rgba(78,205,196,.42)' : 'rgba(255,107,107,.42)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(X, Y, R * 1.8, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 剩余反弹次数标记
+      if (b.bounces > 0) {
+        ctx.fillStyle = '#ffffff';
+        for (var m = 0; m < (b.maxBounce - b.bounces); m++) {
+          ctx.beginPath();
+          ctx.arc(X - 3 + m * 3, Y - R * 2.4, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+  }
+
+  function drawCoins() {
+    for (var i = 0; i < dropCoins.length; i++) {
+      var c = dropCoins[i];
+      var bobY = Math.sin((performance.now() / 320) + c.bob) * px(0.06);
+      var X = px(c.x), Y = px(c.y) + bobY;
+      var R = px(0.16);
+
+      // 光晕
+      var g = ctx.createRadialGradient(X, Y, 0, X, Y, R * 2.4);
+      g.addColorStop(0, 'rgba(255,214,102,.46)');
+      g.addColorStop(1, 'rgba(255,214,102,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(X, Y, R * 2.4, 0, Math.PI * 2); ctx.fill();
+
+      // 金币
+      ctx.fillStyle = '#f5b942';
+      ctx.beginPath(); ctx.arc(X, Y, R, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffe28a';
+      ctx.beginPath(); ctx.arc(X - R * 0.22, Y - R * 0.22, R * 0.62, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c9962b';
+      ctx.font = 'bold ' + Math.round(R * 1.3) + 'px system-ui';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('¥', X, Y + R * 0.06);
+    }
+  }
+
+  function drawEffects() {
+    for (var i = 0; i < effects.length; i++) {
+      var e = effects[i];
+      var a = clamp(e.life / e.max, 0, 1);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = e.color;
+      ctx.beginPath();
+      ctx.arc(px(e.x), px(e.y), px(e.size / cell) * cell * 0.5 + e.size * 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    for (var j = 0; j < floats.length; j++) {
+      var f = floats[j];
+      var fa = clamp(f.life / f.max, 0, 1);
+      ctx.globalAlpha = fa;
+      ctx.fillStyle = f.color;
+      ctx.font = 'bold ' + Math.round(cell * 0.46) + 'px system-ui';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'rgba(0,0,0,.6)';
+      ctx.lineWidth = 3;
+      ctx.strokeText(f.text, px(f.x), px(f.y));
+      ctx.fillText(f.text, px(f.x), px(f.y));
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // 玩家藏在草里时的"我在这"标记：一圈缓慢呼吸的虚线。
+  // 只服务于玩家自己的方位感，不参与任何战斗判定。
+  function drawSelfMarker(t) {
+    var X = px(t.gx), Y = px(t.gy), R = px(t.r);
+    var pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.004);
+    ctx.save();
+    ctx.globalAlpha = 0.35 + pulse * 0.30;
+    ctx.strokeStyle = '#9fe6ff';
+    ctx.lineWidth = Math.max(1.4, R * 0.13);
+    if (ctx.setLineDash) { ctx.setLineDash([R * 0.5, R * 0.42]); }
+    ctx.beginPath();
+    ctx.arc(X, Y, R * 1.38, 0, Math.PI * 2);
+    ctx.stroke();
+    if (ctx.setLineDash) { ctx.setLineDash([]); }
+    ctx.restore();
+  }
+
+  // 血条 + 护盾条（画在坦克上方）
+  function drawHpBars() {
+    var list = [player];
+    for (var i = 0; i < foes.length; i++) { list.push(foes[i]); }
+    for (var j = 0; j < list.length; j++) {
+      var t = list[j];
+      if (!t || !t.alive || t.spawnAnim > 0) { continue; }
+      // 藏在草里、玩家又看不见的敌人：连血条都不画，
+      // 否则一根悬空的血条等于把藏身位置标出来了。
+      if (!t.isPlayer && inGrass(t) && player && !canSee(player, t)) { continue; }
+      var X = px(t.gx), Y = px(t.gy) - px(t.r) - cell * 0.42;
+      var W = cell * 1.05, H = cell * 0.14;
+      var bx = X - W / 2;
+
+      // 护盾条：画在血条上方，蓝色
+      if (t.shieldMax > 0) {
+        var SH = cell * 0.11;
+        var sy = Y - SH - cell * 0.13;
+        ctx.fillStyle = 'rgba(0,0,0,.55)';
+        roundRect(bx - 1, sy - 1, W + 2, SH + 2, SH / 2 + 1); ctx.fill();
+        var sr = clamp(t.shield / t.shieldMax, 0, 1);
+        ctx.fillStyle = t.shieldFlash > 0 ? '#ffffff' : '#7fd6ff';
+        roundRect(bx, sy, W * sr, SH, SH / 2); ctx.fill();
+      }
+
+      ctx.fillStyle = 'rgba(0,0,0,.55)';
+      roundRect(bx - 1, Y - 1, W + 2, H + 2, H / 2 + 1); ctx.fill();
+
+      var ratio = clamp(t.hp / t.maxHp, 0, 1);
+      ctx.fillStyle = t.isPlayer ? '#4ecdc4' : '#ff6b6b';
+      roundRect(bx, Y, W * ratio, H, H / 2); ctx.fill();
+    }
+  }
+
+  function draw() {
+    ctx.save();
+
+    // 震动只在战斗进行中生效。
+    // 结算/暂停时 update() 不再递减 shakeT，若此处仍按 shakeT 偏移，
+    // 画面会永久抖动（曾导致"每局结束窗口一直抖"）。
+    if (shakeT > 0 && state === 'playing') {
+      var m = shakeMag * (shakeT / 0.42);
+      ctx.translate(rnd(-m, m), rnd(-m, m));
+    }
+
+    drawGrid();
+    drawMap();
+    drawCoins();
+    drawBullets();
+
+    // 玩家在草丛里 → 自己被草盖住（半透明），但额外画一圈虚线标出自己位置，
+    // 否则玩家连自己在哪都看不清。这圈只画给玩家看，AI 不用画面做判断。
+    // 刚开过火时不算"藏住"：火光会把草照亮（见 drawExposeHighlights）。
+    var playerInGrassNow = player && inGrass(player);
+    var playerHidden = playerInGrassNow && !isExposed(player);
+    if (player) { drawTank(player, playerHidden ? 0.5 : 1); }
+    if (playerHidden) { drawSelfMarker(player); }
+
+    for (var fi = 0; fi < foes.length; fi++) {
+      var foe = foes[fi];
+      if (!foe || !foe.alive) { continue; }
+      // 敌人藏在草里、且玩家看不见它 → 整个不画。
+      // 血条同理（见 drawHpBars），不然血条会把位置暴露出去，草就白藏了。
+      if (inGrass(foe) && player && !canSee(player, foe)) { continue; }
+      drawTank(foe, 1);
+    }
+
+    drawGrassOverlay();     // 草叶盖在坦克上方 —— 这一层才是"藏"的关键
+    drawExposeHighlights(); // 刚开火的坦克重新浮到草叶之上（火光把草照亮）
+    drawHpBars();
+    drawEffects();
+
+    ctx.restore();
+
+    // 隐蔽提示跟随当前帧状态（内部有缓存，不会每帧碰 DOM）
+    syncHiddenBadge();
+  }
+
+  // ==================== 更新 ====================
+  var keys = { up: false, down: false, left: false, right: false, fire: false };
+
+  function update(dt) {
+    // ---- 关卡简报倒计时（帧驱动，切页/暂停都不会乱序）----
+    if (state === 'brief') {
+      briefTimer -= dt;
+      var sec = Math.max(0, Math.ceil(briefTimer / 1000));
+      if (sec !== briefLastSec) {
+        briefLastSec = sec;
+        if (lvCount) {
+          lvCount.textContent = sec > 0 ? (sec + ' 秒后自动开打 · 也可以直接点下面的按钮') : '开始！';
+        }
+      }
+      if (briefTimer <= 0) { startLevelRound(); }
+      return;
+    }
+
+    if (state !== 'playing') { return; }
+
+    if (shakeT > 0) { shakeT = Math.max(0, shakeT - dt / 1000); }
+
+    // ---- 玩家控制 ----
+    if (player && player.alive) {
+      if (player.spawnAnim > 0) { player.spawnAnim = Math.max(0, player.spawnAnim - dt / 1000); }
+      if (player.hurtFlash > 0) { player.hurtFlash = Math.max(0, player.hurtFlash - dt / 1000); }
+      if (player.shieldFlash > 0) { player.shieldFlash = Math.max(0, player.shieldFlash - dt / 1000); }
+      player.fireTimer = Math.max(0, player.fireTimer - dt);
+      player.exposeT = Math.max(0, player.exposeT - dt);
+
+
+      // ---- 移动：坦克式相对操控 ----
+      // 左右键 = 车体原地转向（旋转车头），前后键 = 沿车头方向前进 / 倒车
+      var turn = 0;
+      if (keys.left) { turn -= 1; }
+      if (keys.right) { turn += 1; }
+
+      var drive = 0;                             // +1 前进，-1 后退
+      if (keys.up) { drive += 1; }
+      if (keys.down) { drive -= 1; }
+
+      if (turn) {
+        // turnRate 单位是「弧度/秒」，换算成毫秒
+        player.moveAngle = (player.moveAngle || 0) + turn * (player.turnRate || TURN_SPEED * 1000) / 1000 * dt;
+        player.trackSpin = turn;                 // 供绘制履带纹路用
+      } else {
+        player.trackSpin = 0;
+      }
+
+      if (drive) {
+        var head = player.moveAngle || 0;
+        var dirX = Math.cos(head) * drive;
+        var dirY = Math.sin(head) * drive;
+        player.mx = dirX; player.my = dirY;
+        player.backing = (drive < 0);
+        var spd = player.speed * dt * (drive < 0 ? REVERSE_MUL : 1);
+        tryMove(player, dirX * spd, dirY * spd);
+        clampToField(player);
+      } else {
+        player.mx = 0; player.my = 0;
+        player.backing = false;
+      }
+
+      // ---- 瞄准：炮筒方向与车头保持一致 ----
+      player.angle = player.moveAngle || 0;
+
+      if (keys.fire) { fire(player); }
+    }
+
+    // ---- AI（1~3 台）----
+    for (var ai = 0; ai < foes.length; ai++) {
+      var f = foes[ai];
+      if (!f || !f.alive) { continue; }
+      if (f.spawnAnim > 0) { f.spawnAnim = Math.max(0, f.spawnAnim - dt / 1000); }
+      if (f.hurtFlash > 0) { f.hurtFlash = Math.max(0, f.hurtFlash - dt / 1000); }
+      if (f.shieldFlash > 0) { f.shieldFlash = Math.max(0, f.shieldFlash - dt / 1000); }
+      f.fireTimer = Math.max(0, f.fireTimer - dt);
+      f.exposeT = Math.max(0, f.exposeT - dt);
+      updateFoe(f, dt);
+    }
+
+    updateBullets(dt);
+
+    // 履带动画相位：车体转动或行进时履带纹路滑动
+    var treadFeed = [player];
+    for (var tf = 0; tf < foes.length; tf++) { treadFeed.push(foes[tf]); }
+    for (var ti = 0; ti < treadFeed.length; ti++) {
+      var tt = treadFeed[ti];
+      if (!tt || !tt.alive) { continue; }
+      var moving = (tt.mx || tt.my) ? 1 : 0;
+      var spinning = (tt === player && tt.trackSpin) ? tt.trackSpin : 0;
+      var rate = moving * 1.0 + Math.abs(spinning) * 0.9;
+      if (rate) { tt.treadPhase = (tt.treadPhase || 0) + rate * dt * 0.0042; }
+    }
+
+    resolveTankCollision();
+    // 防卡死：碰撞推挤后可能把坦克挤进墙里，兜底拉出来
+    if (player && player.alive) { unstickTank(player); clampToField(player); }
+    for (var uf = 0; uf < foes.length; uf++) {
+      if (foes[uf].alive) { unstickTank(foes[uf]); clampToField(foes[uf]); }
+    }
+    updateCoins(dt);
+    updateEffects(dt);
+    updateHUD();
+  }
+
+  // ==================== 主循环 ====================
+  function loop(now) {
+    if (typeof now !== 'number' || !isFinite(now)) { now = performance.now(); }
+    var dt = now - lastTime;
+    if (!isFinite(dt) || dt < 0) { dt = 16.7; }
+    if (dt > 260) { dt = 260; }
+    lastTime = now;
+
+    update(dt);
+    draw();
+    window.requestAnimationFrame(loop);
+  }
+
+  // ==================== 流程控制 ====================
+  // 整体流程：
+  //   开始闯关 → 第 1 关简报 → 打 N 局（赢下多数）→ 本关通过
+  //   → 整备车间（选 1 个新技能 + 用金币强化）→ 第 2 关简报 → … → 第 15 关 → 通关
+  //   某一关打输 → 可以原地重试；重试会把金币 / 升级 / 技能
+  //   回滚到「进入本关之前」，免得反复刷金币。
+  // ==================================================================
+
+  var briefLastSec = -1;             // 简报倒计时上一次显示到第几秒
+  var phoenixUsed = false;           // 本关的不死鸟复活是否已用掉
+
+  // 抽 3 个可选技能（优先给还没满级的）
+  function rollSkillChoices() {
+    var pool = [];
+    for (var i = 0; i < SKILLS.length; i++) {
+      if (sk(SKILLS[i].id) < SKILLS[i].maxLv) { pool.push(SKILLS[i].id); }
+    }
+    // Fisher-Yates 洗牌
+    for (var j = pool.length - 1; j > 0; j--) {
+      var k = rndInt(j + 1);
+      var tmp = pool[j]; pool[j] = pool[k]; pool[k] = tmp;
+    }
+    skillChoices = pool.slice(0, 3);
+    skillPicked = null;
+  }
+
+  // 开始一整轮闯关（金币 / 升级 / 技能全部归零）
+  // resume = true 时从存档续关：金币 / 升级 / 技能一并恢复，直接进存档里那一关
+  function startRun(resume) {
+    ensureAudio();
+    ensureBgm();       // 用户点击「开始闯关」= 首次交互，此时浏览器才允许播放音乐
+    tryPlayBgm();
+    var useSave = !!(resume && runSave);
+    var i, j;
+
+    levelEarned = 0;
+    levelPassed = 0;
+    levelSnapshot = null;
+    phoenixUsed = false;
+    runCoins = 0;
+
+    if (useSave) {
+      coins = runSave.coins;
+      for (i = 0; i < UPGRADES.length; i++) {
+        upgrades[UPGRADES[i].id] = runSave.upgrades[UPGRADES[i].id] || 0;
+      }
+      for (j = 0; j < SKILLS.length; j++) {
+        skills[SKILLS[j].id] = runSave.skills[SKILLS[j].id] || 0;
+      }
+    } else {
+      coins = 0;
+      for (i = 0; i < UPGRADES.length; i++) { upgrades[UPGRADES[i].id] = 0; }
+      for (j = 0; j < SKILLS.length; j++) { skills[SKILLS[j].id] = 0; }
+    }
+
+    setWinNeed();
+    hide(ovStart); hide(ovOver); hide(ovRound); hide(ovPause);
+    enterLevel(useSave ? runSave.lv : 1);
+  }
+
+  // 进入第 lvNo 关：先记快照，再弹战前简报
+  function enterLevel(lvNo) {
+    levelNo = clamp(lvNo, 1, TOTAL_LEVELS);
+    prepNextLv = 0;                    // 离开整备车间，清掉"下一关"标记
+    winsMe = 0;
+    winsFoe = 0;
+    roundInLevel = 1;
+    levelEarned = 0;
+    phoenixUsed = false;
+
+    // 「进本关之前」的状态快照 —— 本关打输了就回滚到这里
+    levelSnapshot = {
+      coins: coins,
+      upgrades: JSON.parse(JSON.stringify(upgrades)),
+      skills: JSON.parse(JSON.stringify(skills))
+    };
+
+    // 写续关存档：此刻的关卡号 + 金币/升级/技能，正好是「重打这一关应有的起点」
+    saveRun(levelNo);
+
+    // 历史最高关卡
+    if (levelNo > bestLevel) { bestLevel = levelNo; saveProgress(); }
+
+    showLevelBrief(levelNo);
+  }
+
+  // 关卡战前简报：把"本关敌人增强了什么"讲清楚
+  function showLevelBrief(lvNo) {
+    var cfg = levelCfg(lvNo);
+    lvTitle.textContent = '第 ' + lvNo + ' / ' + TOTAL_LEVELS + ' 关';
+    lvName.textContent = cfg.name;
+
+    lvBuffs.innerHTML = '';
+    var deltas = levelDelta(lvNo);
+    for (var i = 0; i < deltas.length; i++) {
+      var el = document.createElement('span');
+      el.className = 'lv-buff' +
+        (deltas[i].big ? ' big' : '') +
+        (deltas[i].down ? ' down' : '');
+      el.textContent = deltas[i].icon + ' ' + deltas[i].text;
+      lvBuffs.appendChild(el);
+    }
+
+    if (lvStats) {
+      var items = levelSummary(lvNo);
+      var row = document.createElement('div');
+      row.className = 'lv-stat-row';
+      for (var s = 0; s < items.length; s++) {
+        var chip = document.createElement('span');
+        chip.className = 'lv-stat';
+        chip.textContent = items[s];
+        row.appendChild(chip);
+      }
+      lvStats.innerHTML = '';
+      lvStats.appendChild(row);
+    }
+
+    if (lvCount) {
+      lvCount.textContent = '本关 ' + levelRounds + ' 局 ' + winNeed + ' 胜';
+    }
+
+    briefTimer = BRIEF_MS;
+    briefLastSec = -1;
+    state = 'brief';
+    hide(ovRound); hide(ovOver); hide(ovStart); hide(ovPause);
+    show(ovLevel);
+    updateHUD();
+  }
+
+  // 开始本关当前这一局
+  function startLevelRound() {
+    hide(ovLevel);
+    genStage();
+    initPlayer();
+    initFoes(levelNo);
+    endSpawnGrace();
+    bullets = [];
+    effects = [];
+    floats = [];
+    dropCoins = [];
+    shakeT = 0; shakeMag = 0;   // 新局从静止开始
+    state = 'playing';
+    syncBgmToState();           // 回到战斗：音乐恢复常态音量
+    lastTime = performance.now();
+    addFloat(player.gx, player.gy - 0.9,
+      '第 ' + levelNo + ' 关 · 第 ' + roundInLevel + ' / ' + levelRounds + ' 局', '#b8a1ff');
+    updateHUD();
+  }
+
+  // ---------------- 单局结算 ----------------
+  function endRound(winner) {
+    if (state !== 'playing') { return; }
+    state = 'roundover';
+    syncBgmToState();           // 结算过场：音乐压低
+
+    // 关键：立刻停掉战场震动。
+    // 结算时 update() 会提前 return，shakeT 不再递减；而 draw() 仍每帧读 shakeT，
+    // 于是画面会被永久地随机偏移 = 玩家看到的"结算窗口一直在抖"。
+    shakeT = 0; shakeMag = 0;
+
+    // 先把手雷（掉落金币）收进钱包
+    var swept = 0;
+    for (var i = 0; i < dropCoins.length; i++) { swept += dropCoins[i].value; }
+    dropCoins = [];
+    var mult = (player && player.coinMul) ? player.coinMul : 1;
+    if (swept > 0) { addCoins(swept * mult); }
+
+    if (winner === 'me') {
+      winsMe++;
+      addCoins(roundWinReward(levelNo));
+      sfx.win();
+    } else {
+      winsFoe++;
+      sfx.lose();
+    }
+
+    var levelDone = (winsMe >= winNeed || winsFoe >= winNeed);
+    var levelWon = (winsMe >= winNeed);
+
+    roundScore.textContent = winsMe + ' : ' + winsFoe;
+
+    if (!levelDone) {
+      // 本关还没打完
+      roundTitle.textContent = winner === 'me' ? '🏆 本局胜！' : '💥 本局败';
+      roundSub.innerHTML =
+        (winner === 'me' ? '干得漂亮，继续保持！' : '别急，下局找回场子。') + '<br>' +
+        '本关 ' + levelRounds + ' 局 ' + winNeed + ' 胜　·　你还差 <b>' + (winNeed - winsMe) +
+        '</b> 局，对手还差 <b>' + (winNeed - winsFoe) + '</b> 局';
+      btnNextRound.textContent = '开始第 ' + (roundInLevel + 1) + ' 局';
+      btnNextRound._action = 'next';
+      show(ovRound);
+      updateHUD();
+      return;
+    }
+
+    // ---------------- 本关结束 ----------------
+    if (levelWon) {
+      addCoins(levelClearReward(levelNo));
+      levelPassed = levelNo;
+      roundTitle.textContent = '🎉 第 ' + levelNo + ' 关通过！';
+      roundSub.innerHTML =
+        '比分 ' + winsMe + ' : ' + winsFoe + '　本关共获得 <b>' + levelEarned + '</b> 金币<br>' +
+        (levelNo < TOTAL_LEVELS
+          ? '接下来去 <b>整备车间</b>：选一个新技能，再用金币强化坦克，然后进第 ' + (levelNo + 1) + ' 关。'
+          : '最后一关也拿下了 —— 去收下属于你的胜利吧！');
+      btnNextRound.textContent = (levelNo < TOTAL_LEVELS ? '进入整备车间' : '查看闯关结果');
+      btnNextRound._action = (levelNo < TOTAL_LEVELS ? 'prep' : 'victory');
+      sfx.win();
+    } else {
+      roundTitle.textContent = '💥 第 ' + levelNo + ' 关失守';
+      roundSub.innerHTML =
+        '本关比分 ' + winsMe + ' : ' + winsFoe + '，要赢下 ' + winNeed + ' 局才能通关。<br>' +
+        '点「重新挑战本关」会把你送回 <b>进入本关之前</b> 的金币与升级状态。';
+      btnNextRound.textContent = '重新挑战本关';
+      btnNextRound._action = 'retry';
+      sfx.lose();
+    }
+    show(ovRound);
+    updateHUD();
+  }
+
+  // 结算面板上的主按钮：4 种后续动作
+  function nextRound() {
+    var act = btnNextRound._action || 'next';
+    if (act === 'next') {
+      if (state !== 'roundover') { return; }
+      roundInLevel++;
+      hide(ovRound);
+      startLevelRound();
+    } else if (act === 'prep') {
+      openPrep();
+    } else if (act === 'retry') {
+      restoreLevelSnapshot();
+      hide(ovRound);
+      enterLevel(levelNo);
+    } else if (act === 'victory') {
+      runVictory();
+    }
+  }
+
+  // 把金币 / 升级 / 技能回滚到进入本关之前
+  function restoreLevelSnapshot() {
+    if (!levelSnapshot) { return; }
+    coins = levelSnapshot.coins;
+    upgrades = JSON.parse(JSON.stringify(levelSnapshot.upgrades));
+    skills = JSON.parse(JSON.stringify(levelSnapshot.skills));
+    for (var i = 0; i < UPGRADES.length; i++) {
+      if (!isFinite(upgrades[UPGRADES[i].id])) { upgrades[UPGRADES[i].id] = 0; }
+    }
+    for (var j = 0; j < SKILLS.length; j++) {
+      if (!isFinite(skills[SKILLS[j].id])) { skills[SKILLS[j].id] = 0; }
+    }
+    levelEarned = 0;
+    phoenixUsed = false;
+  }
+
+  // ==================== 整备车间（技能三选一 + 装备升级）====================
+  function openPrep() {
+    ensureAudio();
+    prepNextLv = (levelNo < TOTAL_LEVELS) ? (levelNo + 1) : 0;
+    rollSkillChoices();
+    if (prepBanner) {
+      prepBanner.classList.remove('hidden');
+      prepBanner.innerHTML =
+        '<b>第 ' + levelNo + ' 关 · 通过</b>　本关获得 ' + levelEarned + ' 金币' +
+        (levelNo < TOTAL_LEVELS ? '　→　即将进入第 ' + (levelNo + 1) + ' 关：' + levelCfg(levelNo + 1).name : '');
+    }
+    if (skillSec) { skillSec.classList.remove('hidden'); }
+    shopTitle.textContent = '🛠 整备车间';
+    state = 'prep';
+    syncBgmToState();
+    renderShop();
+    renderSkills();
+    syncPrepButton();
+    hide(ovRound); hide(ovPause);
+    show(shopPanel);
+    updateHUD();
+  }
+
+  function closePrep() {
+    hide(shopPanel);
+    if (levelNo >= TOTAL_LEVELS) { runVictory(); return; }
+    enterLevel(levelNo + 1);
+  }
+
+  // 渲染 3 张技能卡
+  function renderSkills() {
+    if (!skillRow) { return; }
+    skillRow.innerHTML = '';
+    if (!skillChoices.length) {
+      skillNote.textContent = '（所有技能都已精通）';
+      return;
+    }
+    skillNote.textContent = '（选 1 个）';
+
+    for (var i = 0; i < skillChoices.length; i++) {
+      (function (id) {
+        var s = null;
+        for (var q = 0; q < SKILLS.length; q++) { if (SKILLS[q].id === id) { s = SKILLS[q]; } }
+        if (!s) { return; }
+        var cur = sk(id);
+        var card = document.createElement('div');
+        card.className = 'skill-card' + (skillPicked === id ? ' on' : '');
+
+        var ic = document.createElement('div');
+        ic.className = 'sk-icon';
+        ic.textContent = s.icon;
+        card.appendChild(ic);
+
+        var nm = document.createElement('div');
+        nm.className = 'sk-name';
+        nm.textContent = s.name;
+        card.appendChild(nm);
+
+        var ds = document.createElement('div');
+        ds.className = 'sk-desc';
+        ds.textContent = s.desc;
+        card.appendChild(ds);
+
+        var lvl = document.createElement('div');
+        lvl.className = 'sk-lv';
+        lvl.textContent = 'Lv.' + cur + ' → Lv.' + (cur + 1) + ' / ' + s.maxLv;
+        card.appendChild(lvl);
+
+        card.addEventListener('click', function () { pickSkill(id); });
+        skillRow.appendChild(card);
+      })(skillChoices[i]);
+    }
+  }
+
+  function pickSkill(id) {
+    ensureAudio();
+    var s = null;
+    for (var q = 0; q < SKILLS.length; q++) { if (SKILLS[q].id === id) { s = SKILLS[q]; } }
+    if (!s) { return; }
+    if (sk(id) >= s.maxLv) { toast('该技能已满级'); sfx.denied(); return; }
+
+    skills[id] = sk(id) + 1;
+    skillPicked = id;
+    saveProgress();          // 立刻落盘，避免选完技能就关页面丢掉
+    sfx.buy();
+    toast('学会技能：' + s.name + ' Lv.' + skills[id]);
+    renderSkills();
+    renderShop();
+    syncPrepButton();
+    updateHUD();
+  }
+
+  // 底部按钮文案 / 可用状态
+  function syncPrepButton() {
+    if (!btnShopClose) { return; }
+    if (state !== 'prep') {
+      btnShopClose.disabled = false;
+      btnShopClose.textContent = '返回战场';
+      return;
+    }
+    var needPick = (skillChoices.length > 0 && !skillPicked);
+    btnShopClose.disabled = needPick;
+    if (needPick) { btnShopClose.textContent = '先选一个技能 ↑'; }
+    else if (levelNo >= TOTAL_LEVELS) { btnShopClose.textContent = '完成闯关！'; }
+    else { btnShopClose.textContent = '进入第 ' + (levelNo + 1) + ' 关'; }
+  }
+
+  // ---------------- 通关 ----------------
+  function runVictory() {
+    state = 'over';
+    syncBgmToState();           // 通关结算：音乐压低
+    hide(shopPanel); hide(ovRound); hide(ovLevel);
+    shakeT = 0; shakeMag = 0;
+    clearCount++;
+    prepNextLv = 0;
+    clearRun();                 // 全通了，续关存档没意义了
+    if (bestLevel < TOTAL_LEVELS) { bestLevel = TOTAL_LEVELS; }
+    saveProgress();
+
+    overTitle.textContent = '🏆 全部 ' + TOTAL_LEVELS + ' 关通关！';
+    overSub.textContent = '从新兵营一路打到最终堡垒，你把 15 关全拿下了。';
+    overScore.textContent = TOTAL_LEVELS + ' / ' + TOTAL_LEVELS;
+    overGrade.textContent = '★ 通关';
+    overEarn.textContent = '本次闯关共赚取 ' + runCoins + ' 金币';
+    overBest.textContent = '通关 ' + clearCount + ' 次　·　历史最高：第 ' + bestLevel + ' 关';
+    sfx.win();
+    show(ovOver);
+    updateHUD();
+  }
+
+  // ==================== 返回主页 ====================
+  // 清干净战场，回到开始界面（历史纪录等存档保留）
+  function goHome() {
+    if (shopPanel && !shopPanel.classList.contains('hidden')) { hide(shopPanel); }
+
+    state = 'start';
+    syncBgmToState();           // 回主页：音乐会暂停（见 syncBgmToState 内对 start 的处理）
+    player = null;
+    foes = [];
+    bullets = [];
+    effects = [];
+    floats = [];
+    dropCoins = [];
+    shakeT = 0; shakeMag = 0;
+    briefTimer = 0;
+    levelNo = 1;
+    winsMe = 0;
+    winsFoe = 0;
+    roundInLevel = 1;
+    levelEarned = 0;
+    levelSnapshot = null;
+    phoenixUsed = false;
+    btnNextRound._action = 'next';
+    btnPause.textContent = '⏸';
+
+    keys.left = false; keys.right = false; keys.up = false;
+    keys.down = false; keys.fire = false;
+
+    hide(ovPause); hide(ovRound); hide(ovLevel); hide(ovOver);
+    show(ovStart);
+
+    syncRoundPickUI();
+    syncDiffPickUI();
+    refreshStartInfo();
+    updateHUD();
+    genStage();              // 给主页画一张干净的背景地图
+    resize();
+  }
+
+  function togglePause() {
+    if (state === 'playing') {
+      state = 'paused';
+      show(ovPause);
+      btnPause.textContent = '▶';
+      syncBgmToState();
+    } else if (state === 'paused') {
+      state = 'playing';
+      hide(ovPause);
+      lastTime = performance.now();
+      btnPause.textContent = '⏸';
+      syncBgmToState();
+    }
+  }
+
+  // ==================== HUD ====================
+  function refreshStartInfo() {
+    if (!bestLine) { return; }
+
+    var hasSave = !!runSave;
+    if (btnStart) {
+      btnStart.textContent = hasSave ? ('继续闯关 · 第 ' + runSave.lv + ' 关') : '开始闯关';
+    }
+    if (btnRestart) {
+      btnRestart.style.display = hasSave ? '' : 'none';
+      if (!hasSave) { disarmRestart(); }
+      else if (!btnRestart.classList.contains('armed')) {
+        btnRestart.textContent = '从头开始（放弃当前进度）';
+      }
+    }
+
+    var s = '历史最高：第 ' + bestLevel + ' 关';
+    if (clearCount > 0) { s += '　·　已通关 ' + clearCount + ' 次'; }
+    if (hasSave) { s = '存档：第 ' + runSave.lv + ' 关　·　金币 ' + runSave.coins + '　|　' + s; }
+    bestLine.textContent = s;
+  }
+
+  // 「从头开始」需要点两次：第一次只是把按钮变成红色的确认态，3 秒内不点就复原
+  var restartArmTimer = null;
+  function disarmRestart() {
+    if (restartArmTimer) { window.clearTimeout(restartArmTimer); restartArmTimer = null; }
+    if (!btnRestart) { return; }
+    btnRestart.classList.remove('armed');
+    btnRestart.textContent = '从头开始（放弃当前进度）';
+  }
+
+  function onRestartClick() {
+    if (!runSave) { disarmRestart(); return; }
+    if (!btnRestart.classList.contains('armed')) {
+      btnRestart.classList.add('armed');
+      btnRestart.textContent = '再点一次：清空存档并从第 1 关开始';
+      if (restartArmTimer) { window.clearTimeout(restartArmTimer); }
+      restartArmTimer = window.setTimeout(disarmRestart, 3000);
+      return;
+    }
+    disarmRestart();
+    clearRun();
+    refreshStartInfo();
+    sfx.denied();
+  }
+
+  // ==================== 草丛隐蔽提示 ====================
+  // 四种状态：
+  //   ''        不在草里 → 不显示
+  //   'hidden'  在草里且没人贴脸 → 绿色「已隐蔽」
+  //   'exposed' 在草里但刚开过火 → 橙色「已暴露」
+  //   'close'   在草里但被敌人贴到脸上 → 橙色提示「太近了藏不住」
+  // 用缓存避免每帧都碰 DOM。
+  var hiddenBadgeState = '';
+  function syncHiddenBadge() {
+    if (!hiddenBadge) { return; }
+    var want = '';
+    if (state === 'playing' && player && player.alive && inGrass(player)) {
+      want = 'hidden';
+      // 刚开过火：枪口火光把位置暴露了，优先级高于"已隐蔽"
+      if (isExposed(player)) { want = 'exposed'; }
+      // 有没有敌人已经贴到「草丛藏不住」的距离
+      for (var i = 0; i < foes.length; i++) {
+        var f = foes[i];
+        if (!f || !f.alive) { continue; }
+        var d = len(f.gx - player.gx, f.gy - player.gy);
+        if (d <= GRASS_REVEAL_DIST) { want = 'close'; break; }
+      }
+    }
+    if (want === hiddenBadgeState) { return; }
+    hiddenBadgeState = want;
+    hiddenBadge.classList.toggle('on', want !== '');
+    hiddenBadge.classList.toggle('revealed', want === 'close' || want === 'exposed');
+    hiddenBadge.textContent = want === 'close'
+      ? '🌿 太近了 · 藏不住'
+      : (want === 'exposed' ? '🔥 刚开火 · 已暴露' : '🌿 已隐蔽');
+  }
+
+  function updateHUD() {
+    if (uiLevel) { uiLevel.textContent = levelNo + ' / ' + TOTAL_LEVELS; }
+    uiRound.textContent = winsMe + ' : ' + winsFoe;
+
+    uiLife.textContent = (player && player.alive) ? player.hp : 0;
+    if (uiLifeShield) {
+      var hasShield = !!(player && player.shieldMax > 0);
+      uiLifeShield.style.display = hasShield ? '' : 'none';
+      uiLifeShield.textContent = hasShield ? ('盾 ' + (player.alive ? player.shield : 0)) : '';
+    }
+
+    var aliveN = 0, totHp = 0;
+    for (var i = 0; i < foes.length; i++) {
+      if (foes[i].alive) { aliveN++; totHp += foes[i].hp + foes[i].shield; }
+    }
+    uiFoeHp.textContent = totHp;
+    if (uiFoeLv) { uiFoeLv.textContent = '×' + aliveN + '/' + foes.length; }
+
+    uiCoins.textContent = coins;
+
+    var canBuy = false;
+    for (var j = 0; j < UPGRADES.length; j++) {
+      var cost = upgradeCost(UPGRADES[j]);
+      if (cost !== null && coins >= cost) { canBuy = true; break; }
+    }
+    if (btnShop) { btnShop.classList.toggle('has-new', canBuy && state !== 'prep'); }
+  }
+
+  function show(el) { if (el) { el.classList.remove('hidden'); } }
+  function hide(el) { if (el) { el.classList.add('hidden'); } }
+
+  // ==================== 商店 ====================
+  function upgradeCost(u) {
+    var level = lv(u.id);
+    if (level >= u.maxLv) { return null; }
+    return u.baseCost + u.costStep * level;
+  }
+
+  function currentStats() {
+    var bb = 0;
+    if (lv('bullet') >= 4) { bb = 2; } else if (lv('bullet') >= 2) { bb = 1; }
+    return {
+      hp: BASE_HP + lv('armor') + sk('plating'),
+      shield: sk('shield'),
+      speedMul: (1 + lv('speed') * 0.12) * (1 + sk('turbo') * 0.13),
+      turnMul: 1 + lv('turn') * 0.12,
+      spread: 1 + sk('spread'),
+      groups: 1 + lv('ammo'),
+      bulletMul: (1 + lv('bullet') * 0.16) * (1 + sk('velocity') * 0.15),
+      cdMul: (1 - lv('reload') * 0.12) * Math.pow(0.87, sk('rapid')),
+      bounce: BOUNCE_MAX + bb + sk('bounce'),
+      coinMul: 1 + sk('greed') * 0.30
+    };
+  }
+
+  function renderShop() {
+    shopCoins.textContent = coins;
+    shopRow.innerHTML = '';
+
+    for (var i = 0; i < UPGRADES.length; i++) {
+      (function (u) {
+        var level = lv(u.id);
+        var cost = upgradeCost(u);
+        var maxed = cost === null;
+        var afford = !maxed && coins >= cost;
+
+        var card = document.createElement('div');
+        card.className = 'shop-card' + (afford ? ' afford' : '') + (maxed ? ' maxed' : '');
+
+        var top = document.createElement('div');
+        top.className = 'sc-top';
+        top.innerHTML = '<span class="sc-icon">' + u.icon + '</span>' +
+          '<span class="sc-name">' + u.name + '</span>';
+        card.appendChild(top);
+
+        var desc = document.createElement('div');
+        desc.className = 'sc-desc';
+        desc.textContent = u.desc;
+        card.appendChild(desc);
+
+        var dots = document.createElement('div');
+        dots.className = 'dot-lv';
+        for (var k = 0; k < u.maxLv; k++) {
+          var d = document.createElement('i');
+          if (k < level) { d.className = 'on'; }
+          dots.appendChild(d);
+        }
+        card.appendChild(dots);
+
+        var btn = document.createElement('button');
+        btn.className = 'shop-buy';
+        if (maxed) {
+          btn.textContent = '已满级';
+          btn.disabled = true;
+        } else {
+          btn.textContent = '升级 · ' + cost + ' 金';
+          btn.disabled = !afford;
+        }
+        btn.addEventListener('click', function () { buyUpgrade(u); });
+        card.appendChild(btn);
+
+        shopRow.appendChild(card);
+      })(UPGRADES[i]);
+    }
+
+    var s = currentStats();
+    var own = [];
+    for (var q = 0; q < SKILLS.length; q++) {
+      var n = sk(SKILLS[q].id);
+      if (n > 0) { own.push(SKILLS[q].icon + SKILLS[q].name + ' Lv.' + n); }
+    }
+    var skillLine = own.length ? '<br>已学技能：<b>' + own.join('　') + '</b>' : '';
+
+    shopStats.innerHTML =
+      '血量上限 <b>' + s.hp + '</b>　·　护盾 <b>' + s.shield + '</b>　·　' +
+      '移动速度 <b>+' + pct(s.speedMul - 1) + '</b>　·　转向 <b>+' + pct(s.turnMul - 1) + '</b><br>' +
+      '一次射出 <b>' + s.spread + '</b> 发　·　同屏 <b>' + (s.groups * s.spread) + '</b> 发　·　' +
+      '弹速 <b>+' + pct(s.bulletMul - 1) + '</b>　·　反弹 <b>' + s.bounce + '</b> 次　·　' +
+      '开火冷却 <b>' + pct(s.cdMul) + '</b>' + skillLine;
+  }
+
+  function buyUpgrade(u) {
+    ensureAudio();
+    var cost = upgradeCost(u);
+    if (cost === null) { toast('已经满级啦'); sfx.denied(); return; }
+    if (coins < cost) { toast('金币不够'); sfx.denied(); return; }
+
+    coins -= cost;
+    upgrades[u.id] = lv(u.id) + 1;
+    saveProgress();          // 立刻落盘，避免买完升级就关页面丢掉
+    sfx.buy();
+    toast(u.name + ' 升到 Lv.' + upgrades[u.id]);
+    updateHUD();
+
+    // 战斗中立即生效（血量上限提升时补足差额，见 applyUpgrades）
+    if (player && player.alive) { applyUpgrades(player); }
+
+    renderShop();
+  }
+
+  var toastTimer = null;
+  function toast(msg) {
+    if (!shopToast) { return; }
+    shopToast.textContent = msg;
+    shopToast.classList.add('show');
+    if (toastTimer) { window.clearTimeout(toastTimer); }
+    toastTimer = window.setTimeout(function () {
+      shopToast.classList.remove('show');
+    }, 1500);
+  }
+
+  // 战斗中点🛒：暂停并打开商店（不含技能选择）
+  function openShop() {
+    if (state === 'prep') { return; }
+    ensureAudio();
+    var wasPlaying = (state === 'playing');
+    if (wasPlaying) { togglePause(); }
+    hide(ovPause);                  // 别让暂停面板压在商店上
+    if (skillSec) { skillSec.classList.add('hidden'); }
+    if (prepBanner) { prepBanner.classList.add('hidden'); }
+    shopTitle.textContent = '🛒 升级车间';
+    shopPanel._wasPlaying = wasPlaying;
+    renderShop();
+    syncPrepButton();
+    show(shopPanel);
+    sfx.buy();
+  }
+
+  function closeShop() {
+    hide(shopPanel);
+    if (skillSec) { skillSec.classList.remove('hidden'); }
+    if (prepBanner) { prepBanner.classList.remove('hidden'); }
+    if (shopPanel._wasPlaying && state === 'paused') {
+      hide(ovPause);
+      state = 'playing';
+      lastTime = performance.now();
+      btnPause.textContent = '⏸';
+    }
+    shopPanel._wasPlaying = false;
+    updateHUD();
+  }
+
+  // ==================== 输入 ====================
+  var keyMap = {
+    'ArrowUp': 'up', 'ArrowDown': 'down', 'ArrowLeft': 'left', 'ArrowRight': 'right',
+    'KeyW': 'up', 'KeyS': 'down', 'KeyA': 'left', 'KeyD': 'right',
+    'Space': 'fire'
+  };
+
+  window.addEventListener('keydown', function (e) {
+    // 简报界面：空格/回车直接开打
+    if (state === 'brief' && (e.code === 'Space' || e.code === 'Enter')) {
+      startLevelRound();
+      e.preventDefault();
+      return;
+    }
+    if (state === 'roundover' && (e.code === 'Space' || e.code === 'Enter')) {
+      nextRound();
+      e.preventDefault();
+      return;
+    }
+    if (keyMap[e.code]) {
+      keys[keyMap[e.code]] = true;
+      e.preventDefault();
+    }
+    if (e.code === 'KeyP') { togglePause(); e.preventDefault(); }
+    if (e.code === 'Escape') {
+      if (shopPanel && !shopPanel.classList.contains('hidden')) {
+        if (state === 'prep') { closePrep(); } else { closeShop(); }
+      } else { togglePause(); }
+    }
+  });
+
+  window.addEventListener('keyup', function (e) {
+    if (keyMap[e.code]) {
+      keys[keyMap[e.code]] = false;
+      e.preventDefault();
+    }
+  });
+
+  // 触摸：按住画布开火（方向由屏幕方向键控制）
+  canvas.addEventListener('touchstart', function (e) {
+    keys.fire = true;
+    e.preventDefault();
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', function (e) {
+    keys.fire = false;
+    e.preventDefault();
+  }, { passive: false });
+
+  // 手机方向键
+  var pad = document.getElementById('pad');
+  pad.addEventListener('touchstart', function (e) {
+    var b = e.target.closest('button');
+    if (!b) { return; }
+    var k = b.getAttribute('data-key');
+    if (k === 'fire') { keys.fire = true; }
+    else if (k) { keys[k] = true; }
+    e.preventDefault();
+  }, { passive: false });
+
+  pad.addEventListener('touchend', function (e) {
+    var b = e.target.closest('button');
+    if (!b) { return; }
+    var k = b.getAttribute('data-key');
+    if (k === 'fire') { keys.fire = false; }
+    else if (k) { keys[k] = false; }
+    e.preventDefault();
+  }, { passive: false });
+
+  // ==================== 按钮绑定 ====================
+  btnStart.addEventListener('click', function () { startRun(!!runSave); });
+  if (btnRestart) { btnRestart.addEventListener('click', onRestartClick); }
+  btnResume.addEventListener('click', function () { togglePause(); });
+  btnNextRound.addEventListener('click', function () { nextRound(); });
+  btnAgain.addEventListener('click', function () { hide(ovOver); startRun(false); });
+  btnPause.addEventListener('click', function () { togglePause(); });
+  btnLevelGo.addEventListener('click', function () { startLevelRound(); });
+  // 返回主页（顶栏图标 + 三个面板里的按钮）
+  btnHome.addEventListener('click', function () { goHome(); });
+  btnHomePause.addEventListener('click', function () { goHome(); });
+  btnHomeRound.addEventListener('click', function () { goHome(); });
+  btnHomeOver.addEventListener('click', function () { goHome(); });
+  btnShop.addEventListener('click', function () { openShop(); });
+  btnShopClose.addEventListener('click', function () {
+    if (state === 'prep') { closePrep(); } else { closeShop(); }
+  });
+
+  btnSound.addEventListener('click', function () {
+    soundOn = !soundOn;
+    btnSound.textContent = soundOn ? '🔊' : '🔇';
+    if (soundOn) { ensureAudio(); }
+  });
+
+  // 背景音乐开关（独立于音效开关）
+  btnBgm.addEventListener('click', function () {
+    var on = toggleBgm();
+    btnBgm.textContent = on ? '🎵' : '🔇';
+    btnBgm.title = on ? '背景音乐：开' : '背景音乐：关';
+  });
+
+  // 首次任意交互时再试一次播放 —— 浏览器禁止"无交互自动播放"，
+  // 玩家可能没点「开始闯关」就先点了别的地方，这里兜住这种情况。
+  // 用显式 removeEventListener 而不是 addEventListener 的 {once:true}，
+  // 因为 options 对象形式在部分老内核里会被当成 useCapture 布尔值。
+  function firstGestureKick() {
+    document.removeEventListener('click', firstGestureKick);
+    document.removeEventListener('touchstart', firstGestureKick);
+    ensureBgm();
+    if (bgmOn && state !== 'start') { syncBgmToState(); }
+  }
+  document.addEventListener('click', firstGestureKick);
+  document.addEventListener('touchstart', firstGestureKick);
+
+  // 每关局数
+  roundPick.addEventListener('click', function (e) {
+    var b = e.target.closest('button');
+    if (!b) { return; }
+    var r = parseInt(b.getAttribute('data-rounds'), 10);
+    if (!isFinite(r)) { return; }
+    levelRounds = clampRounds(r);
+    setWinNeed();
+    saveProgress();
+    syncRoundPickUI();
+    sfx.countdown();
+  });
+
+  // 自定义局数输入框
+  if (roundInput) {
+    // 输入过程中不打断玩家，等失焦/回车时再归一化
+    roundInput.addEventListener('change', function () {
+      levelRounds = clampRounds(roundInput.value);
+      setWinNeed();
+      saveProgress();
+      syncRoundPickUI();
+      sfx.countdown();
     });
-  </script>
+    roundInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { roundInput.blur(); e.preventDefault(); }
+      e.stopPropagation();                       // 别让 A/D/W/S 之类被游戏当成操控
+    });
+    roundInput.addEventListener('focus', function () { roundInput.select(); });
+    // 输入框里滚轮不该改数值（容易误触）
+    roundInput.addEventListener('wheel', function (e) { e.preventDefault(); }, { passive: false });
+  }
+
+  // 整体难度
+  if (diffPick) {
+    diffPick.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) { return; }
+      var id = b.getAttribute('data-diff');
+      var idx = -1;
+      for (var i = 0; i < DIFFS.length; i++) { if (DIFFS[i].id === id) { idx = i; } }
+      if (idx < 0) { return; }
+      diffIdx = idx;
+      saveProgress();
+      syncDiffPickUI();
+      sfx.countdown();
+    });
+  }
+
+  // 背景音量滑杆
+  if (bgmVol) {
+    // 拖动过程中实时预览（input），松手后存档（change）
+    bgmVol.addEventListener('input', function () {
+      setBgmVolumePct(bgmVol.value);
+      syncBgmVolUI();
+    });
+    bgmVol.addEventListener('change', function () {
+      setBgmVolumePct(bgmVol.value);
+      syncBgmVolUI();
+      saveProgress();
+    });
+    // 别让拖滑杆时的键盘事件漏给游戏操控
+    bgmVol.addEventListener('keydown', function (e) { e.stopPropagation(); });
+  }
+
+  // 窗口尺寸
+  window.addEventListener('resize', function () { resize(); });
+
+  // ==================== 启动 ====================
+  loadProgress();
+  loadRun();                 // 闯关存档（续关用），必须在 refreshStartInfo 之前读
+  resize();
+
+  // 依据存档恢复局数 / 难度选中态
+  syncRoundPickUI();
+  syncDiffPickUI();
+  syncBgmVolUI();
+  refreshStartInfo();
+
+  genStage();                // 主页背景先铺一张地图
+  updateHUD();
+  window.requestAnimationFrame(loop);
+
+  // 供无头测试访问内部状态（生产环境无副作用）
+  if (typeof window !== 'undefined') {
+    window.__G = {
+      getState: function () {
+        return {
+          state: state, levelNo: levelNo, roundInLevel: roundInLevel,
+          winsMe: winsMe, winsFoe: winsFoe, levelRounds: levelRounds, winNeed: winNeed,
+          coins: coins, runCoins: runCoins, bullets: bullets.length, grid: grid,
+          player: player, foes: foes, foe: foes[0] || null,
+          aliveFoes: aliveFoeCount(), foeCount: foes.length,
+          levelPassed: levelPassed, bestLevel: bestLevel, clearCount: clearCount,
+          diffIdx: diffIdx, diff: DIFFS[clampDiff(diffIdx)].id,
+          upgrades: JSON.parse(JSON.stringify(upgrades)),
+          skills: JSON.parse(JSON.stringify(skills)),
+          hasSnapshot: !!levelSnapshot,
+          skillChoices: skillChoices.slice(), skillPicked: skillPicked,
+          briefTimer: briefTimer
+        };
+      },
+      fire: function () { if (player) { fire(player); } },
+      setKey: function (k, v) { keys[k] = v; },
+      tick: function (dt) { update(dt); },
+      // 仅供测试：强制渲染一帧 + 暴露格子像素尺寸，便于采样画布做渲染层验证
+      renderOnce: function () { draw(); return true; },
+      cellSize: function () { return cell; },
+      canvasSize: function () { return { w: canvas.width, h: canvas.height }; },
+      genStage: genStage,
+      startRun: startRun,
+      enterLevel: enterLevel,
+      startLevelRound: startLevelRound,
+      nextRound: nextRound,
+      showLevelBrief: showLevelBrief,
+      loadProgress: loadProgress,
+      levels: function () { return LEVELS; },
+      levelCfg: levelCfg,
+      levelDelta: levelDelta,
+      levelSummary: levelSummary,
+      skillsList: function () { return SKILLS; },
+      initFoes: function (n) { initFoes(n); },
+      endSpawnGrace: endSpawnGrace,
+      aliveFoeCount: aliveFoeCount,
+      openPrep: openPrep,
+      closePrep: closePrep,
+      pickSkill: pickSkill,
+      rollSkillChoices: rollSkillChoices,
+      getSkillChoices: function () { return skillChoices.slice(); },
+      damageTank: function (which) { damageTank(which, null); },
+      restoreLevelSnapshot: restoreLevelSnapshot,
+      upgrade: function (id, lvl) {
+        upgrades[id] = lvl;
+        if (player) { applyUpgrades(player); }
+      },
+      getUpgrades: function () { return upgrades; },
+      setSkills: function (id, n) {
+        skills[id] = n;
+        // applyUpgrades 内部会同步「不死鸟」的复活机会与击杀回血，无需在这里重复处理
+        if (player) { applyUpgrades(player); }
+      },
+      addCoins: addCoins,
+      getBullets: function () {
+        return bullets.map(function (b) {
+          return { x: b.x, y: b.y, vx: b.vx, vy: b.vy, bounces: b.bounces,
+                   maxBounce: b.maxBounce, pierce: b.pierce,
+                   alive: b.alive, fromPlayer: b.fromPlayer };
+        });
+      },
+      goHome: goHome,
+      togglePause: togglePause,
+      // 音频状态查询（仅供测试）：确认真实生效的开关、音量与音乐来源
+      bgmStatus: function () {
+        return {
+          on: bgmOn,
+          ready: bgmReady,
+          src: BGM_SRC,
+          loop: bgmEl ? !!bgmEl.loop : true,
+          volume: bgmEl ? bgmEl.volume : BGM_VOLUME,
+          baseVolume: BGM_VOLUME,
+          userPct: bgmVolumePct,              // 玩家侧档位 0~100
+          idleMul: BGM_MUL_IDLE               // 非战斗状态的压低倍率
+        };
+      },
+      audioStatus: function () { return { soundOn: soundOn, ready: soundReady }; },
+      toggleBgm: toggleBgm,
+      syncBgmToState: syncBgmToState,
+      setBgmVolumePct: function (p) {
+        setBgmVolumePct(p);
+        syncBgmVolUI();
+        return bgmVolumePct;
+      },
+      // 草丛藏身探针（仅供测试）：把一片区域铺成草，摆好玩家与敌人，
+      // 返回双方的「是否在草里 / 是否互相看得见」，以及 AI 的感知状态。
+      probeGrass: function (opt) {
+        opt = opt || {};
+        // 清一片干净场地（含外围留白），避免地形干扰
+        for (var yy = 1; yy <= 9; yy++) {
+          for (var xx = 1; xx <= 12; xx++) { grid[yy][xx] = 0; }
+        }
+        grassLayerDirty = true;   // 探针改了地形，草叶缓存要重烘
+        // 按需求铺草
+        var gx0 = (opt.grassX === undefined) ? 5 : opt.grassX;
+        var gy0 = (opt.grassY === undefined) ? 3 : opt.grassY;
+        var gw = (opt.grassW === undefined) ? 2 : opt.grassW;
+        var gh = (opt.grassH === undefined) ? 2 : opt.grassH;
+        if (gw > 0 && gh > 0) {
+          for (var gy = gy0; gy < gy0 + gh; gy++) {
+            for (var gxx = gx0; gxx < gx0 + gw; gxx++) {
+              if (inBounds(gxx, gy)) { grid[gy][gxx] = 3; }
+            }
+          }
+        }
+        // 摆玩家（默认站草中心）
+        var pxg = (opt.playerX === undefined) ? (gx0 + 0.5) : opt.playerX;
+        var pyg = (opt.playerY === undefined) ? (gy0 + 0.5) : opt.playerY;
+        player.gx = pxg; player.gy = pyg; player.alive = true;
+        // 摆敌人
+        var fx = (opt.foeX === undefined) ? 10 : opt.foeX;
+        var fy = (opt.foeY === undefined) ? 4 : opt.foeY;
+        if (!foes.length) { return { err: '当前没有敌人' }; }
+        var f = foes[0];
+        f.gx = fx; f.gy = fy; f.alive = true; f.spawnAnim = 0;
+        // 重置感知，让本次探测从干净状态开始
+        f.hasSeen = false;
+        f.lostTimer = 0;
+        f.sensedPos = { x: pxg, y: pyg };
+        // 暴露计时也要清零，否则上一轮"开火即暴露"的余温会污染本探针
+        player.exposeT = 0;
+        f.exposeT = 0;
+
+        var playerInGrass = inGrass(player);
+        var foeInGrass = inGrass(f);
+        var foeSeesPlayer = canSee(f, player);
+        var playerSeesFoe = canSee(player, f);
+        var d = len(f.gx - player.gx, f.gy - player.gy);
+
+        return {
+          playerInGrass: playerInGrass,
+          foeInGrass: foeInGrass,
+          foeSeesPlayer: foeSeesPlayer,
+          playerSeesFoe: playerSeesFoe,
+          dist: Math.round(d * 100) / 100,
+          revealDist: GRASS_REVEAL_DIST,
+          // 渲染侧是否会画这个敌人（玩家看不见就不画）
+          foeDrawn: !(foeInGrass && !playerSeesFoe),
+          // 判定用的一致性检查：canSee 应当满足「草里且不贴脸 → 看不见」
+          consistent: (foeInGrass && d > GRASS_REVEAL_DIST && !playerSeesFoe) ||
+                      (!foeInGrass || d <= GRASS_REVEAL_DIST || !playerSeesFoe)
+        };
+      },
+      // 隐蔽提示刷新（供测试直接驱动，不必依赖渲染循环）
+      syncHiddenBadge: function () { syncHiddenBadge(); return hiddenBadgeState; },
+      // 开火即暴露探针（仅供测试）：
+      // 在草里开一枪 → 敌人应立刻看得见；等暴露计时耗尽 → 应重新隐身。
+      // 顺带验证「不在草里开火不触发暴露」和「没打出子弹不触发暴露」。
+      probeExpose: function (opt) {
+        opt = opt || {};
+        // 干净场地
+        for (var yy = 1; yy <= 9; yy++) {
+          for (var xx = 1; xx <= 12; xx++) { grid[yy][xx] = 0; }
+        }
+        grassLayerDirty = true;
+        // 铺一块足够大的草，玩家和敌人都站在里面，避免"退一步就出草"
+        var gx0 = 3, gy0 = 2, gw = 7, gh = 6;
+        for (var gy = gy0; gy < gy0 + gh; gy++) {
+          for (var gxx = gx0; gxx < gx0 + gw; gxx++) {
+            if (inBounds(gxx, gy)) { grid[gy][gxx] = 3; }
+          }
+        }
+        if (!player || !foes.length) { return { err: '场景未就绪' }; }
+
+        var pIn = opt.playerInGrass !== false;   // false → 把玩家挪出草地
+        player.gx = pIn ? 5.5 : 14.5;
+        player.gy = 4.5;
+        player.alive = true;
+        player.spawnAnim = 0;
+        player.exposeT = 0;
+        player.angle = 0;                        // 朝右开火，前方是空地
+        player.fireTimer = 0;
+
+        var f = foes[0];
+        f.gx = 10.5; f.gy = 4.5; f.alive = true; f.spawnAnim = 0;
+        f.exposeT = 0;
+        f.hasSeen = false;
+        f.lostTimer = 0;
+        f.sensedPos = { x: player.gx, y: player.gy };
+
+        bullets = [];
+        var inGrassBefore = inGrass(player);
+        var seesBefore = canSee(f, player);
+
+        // 开一枪（清掉冷却，保证真的能打出去）
+        player.fireTimer = 0;
+        fire(player);
+        var firedOk = bullets.length > 0;
+        var exposedAfterShot = player.exposeT;
+        var seesAfterShot = canSee(f, player);
+
+        // 手动推进暴露计时（不走 update，避免 AI 移动把位置搞乱）
+        // keepExposed=true 时保留暴露状态，供"徽章文案"之类的测试继续观察
+        var elapsed = opt.keepExposed ? 0
+          : (opt.elapsed === undefined ? EXPOSE_MS : opt.elapsed);
+        player.exposeT = Math.max(0, player.exposeT - elapsed);
+        var seesAfterExpire = canSee(f, player);
+        var stillExposed = isExposed(player);
+
+        // 「不在草里开火」对照组
+        // ⚠️ 站位必须落在探针清过的空地里（x≤12 / y≤9），
+        //    否则可能正好踩到原地图上的草丛，对照组就失去意义了。
+        var outdoorX = 11.5, outdoorY = 2.5;
+        var outdoorExpose = null;
+        if (opt.testOutdoor) {
+          player.gx = outdoorX; player.gy = outdoorY;
+          player.exposeT = 0; player.fireTimer = 0; player.angle = 0;
+          bullets = [];
+          fire(player);
+          outdoorExpose = player.exposeT;
+        }
+
+        // 反向对照：敌人躲在草里开火，玩家也应该看得见它（规则对称）
+        var foeSide = null;
+        if (opt.testFoeSide) {
+          player.gx = outdoorX; player.gy = outdoorY; player.exposeT = 0;
+          f.gx = 5.5; f.gy = 4.5; f.exposeT = 0;
+          var hiddenSees = canSee(player, f);
+          f.exposeT = EXPOSE_MS;
+          foeSide = { hiddenSees: hiddenSees, exposedSees: canSee(player, f) };
+          f.exposeT = 0;
+        }
+
+        bullets = [];   // 清掉探针子弹，别污染后续测试
+        return {
+          playerInGrass: inGrassBefore,
+          fired: firedOk,
+          seesBefore: seesBefore,
+          seesAfterShot: seesAfterShot,
+          exposedMs: exposedAfterShot,
+          seesAfterExpire: seesAfterExpire,
+          stillExposed: stillExposed,
+          exposeConst: EXPOSE_MS,
+          outdoorExpose: outdoorExpose,
+          foeSide: foeSide
+        };
+      },
+      // 草丛判定（仅供测试）：某辆坦克此刻是否站在草里
+      inGrass: function (t) { return inGrass(t || player); },
+      canSee: function (a, b) { return canSee(a, b); },
+      // AI 藏身行为探针：跑若干帧，统计 AI 在玩家躲草期间的开火次数与感知更新次数。
+      // opt.withGrass = false 可做「同样场景但玩家站空地」的对照组。
+      probeGrassAI: function (opt) {
+        opt = opt || {};
+        var frames = opt.frames || 240;
+        var withGrass = (opt.withGrass === undefined) ? true : !!opt.withGrass;
+        for (var yy = 1; yy <= 9; yy++) {
+          for (var xx = 1; xx <= 12; xx++) { grid[yy][xx] = 0; }
+        }
+        grassLayerDirty = true;   // 探针改了地形，草叶缓存要重烘
+        // 玩家站草里（withGrass=false 时不铺草，其余条件完全一致）
+        // ⚠️ 探针用的草铺得比游戏内更宽（8x3），这样玩家在草里移动若干格仍留在草中，
+        //    才能测出「AI 跟丢」；真实地图的草是 2x2，玩家多半是静止躲藏。
+        var gx0 = 5, gy0 = 3;
+        if (withGrass) {
+          for (var gy2 = 3; gy2 <= 5; gy2++) {
+            for (var gx2 = 5; gx2 <= 12; gx2++) { grid[gy2][gx2] = 3; }
+          }
+        }
+        player.gx = gx0 + 0.5; player.gy = gy0 + 0.5; player.alive = true;
+        player.mx = 0; player.my = 0;
+        if (!foes.length) { return { err: '当前没有敌人' }; }
+        var f = foes[0];
+        f.gx = 10; f.gy = 4; f.alive = true; f.spawnAnim = 0;
+        f.hasSeen = false; f.lostTimer = 0;
+        f.sensedPos = { x: player.gx, y: player.gy };
+        f.fireTimer = 0;
+        f.angle = 0; f.sensedAngle = 0;
+
+        var shots = 0;
+        var senseUpdates = 0;
+        var prevSense = { x: f.sensedPos.x, y: f.sensedPos.y };
+        var bulletsBefore = bullets.length;
+        // 可选：让玩家一边躲一边移动。这是检验「藏身」最干净的指标 ——
+        // 看得见时 AI 的认知位置会跟着走，看不见时它会停在原地。
+        var stepX = opt.moveStep || 0;
+        for (var i = 0; i < frames; i++) {
+          if (stepX) {
+            player.gx += stepX;
+            player.mx = stepX > 0 ? 1 : -1;
+            player.my = 0;
+          }
+          f.fireTimer = 0;                 // 排除冷却干扰，只看"愿不愿意开火"
+          f.senseTimer = 0;                // 每帧都刷新感知判定，放大差异
+          updateFoe(f, 16);
+          if (f.sensedPos.x !== prevSense.x || f.sensedPos.y !== prevSense.y) {
+            senseUpdates++;
+            prevSense = { x: f.sensedPos.x, y: f.sensedPos.y };
+          }
+          if (bullets.length > bulletsBefore) { shots += bullets.length - bulletsBefore; bulletsBefore = bullets.length; }
+        }
+        // 收尾：清掉探针打出的子弹，避免污染后续测试
+        bullets.length = 0;
+        // 认知误差：AI 以为玩家在 sensedPos，玩家实际在 player —— 差距越大说明藏得越成功
+        var senseErr = len(f.sensedPos.x - player.gx, f.sensedPos.y - player.gy);
+        return {
+          frames: frames,
+          withGrass: withGrass,
+          shots: shots,
+          senseUpdates: senseUpdates,
+          senseError: Math.round(senseErr * 100) / 100,
+          movedDist: Math.round(Math.abs(stepX) * frames * 100) / 100,
+          playerInGrass: inGrass(player),
+          foeSeesPlayer: canSee(f, player),
+          foeStillAtSpawn: Math.round(f.gx * 100) / 100 + ',' + Math.round(f.gy * 100) / 100
+        };
+      },
+      // 穿墙行为探针（仅供测试）：在玩家右侧铺一堵墙，发一颗指定性质的子弹，
+      // 返回「子弹是否越过墙体 / 墙是否还在 / 子弹最终位置」。
+      probePierce: function (opt) {
+        opt = opt || {};
+        var row = 3, wx = 6;                    // 第 6 列造一堵墙，玩家在第 2 列
+        var brick = !!opt.brick;
+        var edge = !!opt.edge;
+
+        // 清空一片区域，铺一堵竖墙
+        for (var yy = 1; yy <= 5; yy++) {
+          for (var xx = 1; xx <= 8; xx++) { grid[yy][xx] = 0; }
+        }
+        if (edge) {
+          // 测边界：把玩家放到最右边，朝右打
+          player.gx = 2.5; player.gy = row + 0.5;
+          player.moveAngle = 0; player.angle = 0;
+        } else {
+          grid[row][wx] = brick ? 1 : 2;
+          player.gx = 2.5; player.gy = row + 0.5;
+          player.moveAngle = 0; player.angle = 0;
+        }
+        player.spawnAnim = 0;
+        player.fireTimer = 0;
+        bullets.length = 0;
+
+        var b = {
+          x: player.gx + player.r + BULLET_R + 0.05, y: player.gy,
+          vx: BULLET_SPEED * 3, vy: 0, speed: BULLET_SPEED * 3,
+          owner: player, fromPlayer: true,
+          bounces: 0, maxBounce: BOUNCE_MAX,
+          pierce: (opt.charged ? 1 : 0),
+          alive: true, trail: []
+        };
+        // 边界场景：把子弹放到最右列外侧，直接朝右飞
+        if (edge) {
+          b.x = COLS - 1.2; b.y = row + 0.5;
+        }
+        bullets.push(b);
+
+        var startX = b.x;
+        for (var f = 0; f < 120 && b.alive; f++) { update(16.7); }
+
+        var wallLeft = (edge ? null : grid[row][wx]);
+        return {
+          scenario: edge ? 'edge' : (brick ? 'brick' : 'steel'),
+          charged: !!opt.charged,
+          passedWall: !edge && b.x > (wx + 1),
+          wallIntact: edge ? null : (wallLeft === (brick ? 1 : 2)),
+          bulletAlive: b.alive,
+          startX: +startX.toFixed(2),
+          endX: +b.x.toFixed(2),
+          inBounds: b.x > 0 && b.x < COLS
+        };
+      },
+      getVisibleOverlays: function () {
+        var ids = ['ovStart', 'ovPause', 'ovRound', 'ovLevel', 'ovOver'];
+        var out = [];
+        for (var i = 0; i < ids.length; i++) {
+          var el = document.getElementById(ids[i]);
+          if (el && !el.classList.contains('hidden')) { out.push(ids[i]); }
+        }
+        if (shopPanel && !shopPanel.classList.contains('hidden')) { out.push('shopPanel'); }
+        return out;
+      },
+      setPlayer: function (gx, gy, angle) {
+        if (!player) { return; }
+        player.gx = gx; player.gy = gy;
+        if (angle !== undefined) {
+          player.moveAngle = angle;    // 车头朝向（炮筒跟随车头，两者一致）
+          player.angle = angle;
+        }
+        player.spawnAnim = 0;
+      },
+      setFoe: function (gx, gy, angle, idx) {
+        var f = foes[idx || 0];
+        if (!f) { return; }
+        f.gx = gx; f.gy = gy;
+        if (angle !== undefined) { f.angle = angle; f.moveAngle = angle; }
+        f.spawnAnim = 0;
+      },
+      setGrid: function (g) { grid = g; },
+      clearBullets: function () { bullets = []; },
+      // 测试用：走与输入框完全相同的代码路径设置每关局数
+      setRounds: function (n) {
+        levelRounds = clampRounds(n);
+        setWinNeed();
+        saveProgress();
+        syncRoundPickUI();
+        return levelRounds;
+      },
+      // 测试用：按 id 设置整体难度（与点按钮同一条路径）
+      setDiff: function (id) {
+        var idx = -1;
+        if (typeof id === 'number') { idx = clampDiff(id); }
+        else { for (var i = 0; i < DIFFS.length; i++) { if (DIFFS[i].id === id) { idx = i; } } }
+        if (idx < 0) { return null; }
+        diffIdx = idx;
+        saveProgress();
+        syncDiffPickUI();
+        return DIFFS[diffIdx].id;
+      },
+      diffs: function () {
+        return DIFFS.map(function (d) { return { id: d.id, name: d.name, mul: d.mul }; });
+      },
+      // 测试用：闯关存档
+      getRunSave: function () {
+        return runSave ? JSON.parse(JSON.stringify(runSave)) : null;
+      },
+      saveRun: saveRun,
+      loadRun: loadRun,
+      clearRun: clearRun,
+      refreshStartInfo: refreshStartInfo,
+      getStartText: function () {
+        return {
+          btn: btnStart ? btnStart.textContent : '',
+          restart: btnRestart ? {
+            visible: btnRestart.style.display !== 'none',
+            text: btnRestart.textContent
+          } : null,
+          line: bestLine ? bestLine.textContent : ''
+        };
+      },
+      // 测试用：读取震动状态（用于验证结算时震动已归零）
+      getShake: function () { return { t: shakeT, mag: shakeMag }; },
+      triggerShake: function (t, mag) { shake(t, mag); },
+      // 测试用：读取当前常量配置，避免测试脚本写死数值
+      getConfig: function () {
+        return {
+          cols: COLS, rows: ROWS, tankSize: TANK,
+          playerSpeed: P_SPEED, bulletSpeed: BULLET_SPEED, bulletR: BULLET_R,
+          fireCd: FIRE_CD, turnSpeed: TURN_SPEED, reverseMul: REVERSE_MUL,
+          bounceMax: BOUNCE_MAX, baseHp: BASE_HP,
+          totalLevels: TOTAL_LEVELS, spreadArc: SPREAD_ARC
+        };
+      }
+    };
+  }
+})();
+</script>
 </body>
 </html>
