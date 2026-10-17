@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="favicon.ico">
+<meta name="theme-color" content="#0f1216">
+<meta name="description" content="坦克动荡 1v1 对战 —— 15 关轮换式升级，9 种技能，单文件网页游戏">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>坦克动荡 · 1v1 对战</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: radial-gradient(circle at 50% 22%, #1b2530 0%, #0f1216 62%, #08090b 100%);
+    color: #e8eef4;
+    font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", system-ui, -apple-system, sans-serif;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 26px; padding: 28px 20px;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  .logo { font-size: 62px; line-height: 1; filter: drop-shadow(0 6px 20px rgba(90,170,255,.35)); animation: pop .55s cubic-bezier(.2,1.4,.4,1) both; }
+  @keyframes pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  h1 { margin: 0; font-size: 27px; letter-spacing: 3px; font-weight: 700; }
+  .sub { margin: 0; font-size: 14px; color: #8fa3b6; letter-spacing: 1px; }
+  .play {
+    display: block; width: min(400px, 88vw);
+    padding: 19px 0; margin-top: 6px;
+    background: linear-gradient(135deg, #3f7fd6, #2a5fa8);
+    color: #fff; font-size: 19px; font-weight: 700; letter-spacing: 3px;
+    text-align: center; text-decoration: none;
+    border-radius: 13px; border: none; cursor: pointer;
+    box-shadow: 0 8px 26px rgba(48,110,196,.45), inset 0 1px 0 rgba(255,255,255,.22);
+    transition: transform .13s ease, box-shadow .13s ease, filter .13s ease;
+  }
+  .play:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(48,110,196,.6), inset 0 1px 0 rgba(255,255,255,.22); }
+  .play:active { transform: translateY(1px) scale(.985); filter: brightness(.94); }
+  .tips {
+    display: flex; flex-wrap: wrap; justify-content: center;
+    gap: 8px 10px; max-width: 460px;
+  }
+  .chip {
+    font-size: 12.5px; color: #9db2c6;
+    background: rgba(255,255,255,.055);
+    border: 1px solid rgba(255,255,255,.09);
+    padding: 6px 12px; border-radius: 999px; white-space: nowrap;
+  }
+  .hint { font-size: 12px; color: #64798d; letter-spacing: .5px; text-align: center; line-height: 1.75; }
+  kbd {
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16);
+    border-radius: 5px; padding: 1px 7px; font-family: inherit; font-size: 11.5px; color: #c3d3e2;
+  }
+  @media (max-width: 480px) {
+    .logo { font-size: 50px; }
+    h1 { font-size: 22px; letter-spacing: 2px; }
+  }
+</style>
+</head>
+<body>
+  <div class="logo">🎯</div>
+  <h1>坦克动荡</h1>
+  <p class="sub">1v1 对战 · 15 关轮换升级</p>
+
+  <a class="play" href="坦克动荡-1v1对战.html" id="startBtn">开 始 游 戏</a>
+
+  <div class="tips">
+    <span class="chip">🚀 15 个关卡</span>
+    <span class="chip">🎯 9 种技能</span>
+    <span class="chip">🎵 自带背景音乐</span>
+    <span class="chip">📱 手机可玩</span>
+  </div>
+
+  <p class="hint">
+    电脑：<kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移动 · 鼠标瞄准 · 左键开火<br>
+    手机：屏幕左下角虚拟摇杆移动 · 右侧点位开火 · 横屏体验更好<br>
+    <span style="color:#7d93a8">进入后点一下屏幕音乐才会响起（浏览器规则）</span>
+  </p>
+
+  <script>
+    // 预加载音乐，进游戏时就不用等
+    (function () {
+      try {
+        var a = new Audio('bgm.mp3');
+        a.preload = 'auto';
+        a.volume = 0;
+        a.play().then(function () { a.pause(); }).catch(function () {});
+      } catch (e) {}
+    })();
+    // 手机上把地址栏挤掉一点，画面更满
+    document.getElementById('startBtn').addEventListener('click', function () {
+      setTimeout(function () { window.scrollTo(0, 1); }, 60);
+    });
+  </script>
+</body>
+</html>
