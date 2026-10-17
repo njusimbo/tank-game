@@ -1023,6 +1023,16 @@
   var REVERSE_MUL = 0.68;            // 倒车速度倍率（坦克倒着开更慢）
   var BOUNCE_MAX = 2;                // 子弹最多反弹次数
   var SPREAD_ARC = 0.15;             // 散射时相邻两发的夹角（弧度）≈ 8.6°
+  // ---- AI 瞄准手感 ----
+  // 老做法：每隔 reactMs 抽一个「瞄准角偏差」，这一整段时间内偏差固定不变。
+  //   后果 = 只要这次抽偏了，这段时间里每一发都偏；抽正了，每一发都中
+  //   → 玩家看到的节奏就是「一连串打不中，然后一连串打中」。
+  // 新做法：偏差拆成两份 —— 炮口有一点持续的小摆动（看起来在"追"目标），
+  //   真正的误差主要放在每发子弹出膛的瞬间独立抽取，所以命不命中互不相关。
+  var AIM_WOBBLE = 0.25;             // 炮口跟随目标的残余摆动（× 关卡 jitter）
+  var AIM_SCATTER = 1.05;            // 每发子弹的独立散布（× 关卡 jitter）
+                                     // ↑ 校准值：让"每秒挨的弹数"与改动前基本持平
+
   var PIERCE_CHANCE = 0.5;           // 穿墙弹「带电」概率：学过技能后约一半子弹能穿钢墙
                                      // （不做成 100%，是为了让砖墙/钢墙的掩体价值仍然存在）
   var ROUND_DELAY = 1600;            // 单局结束后的过场延迟
@@ -1781,6 +1791,7 @@
       f.turnRate = 2.0 * cfg.turn;
       f.spread = cfg.spread;
       f.spreadArc = SPREAD_ARC;
+      f.aimScatter = cfg.jitter * AIM_SCATTER;   // 每发独立散布（玩家没有这个字段 → 不受影响）
       f.maxBullets = cfg.maxBullets * cfg.spread;
       f.bulletSpeedMul = cfg.bspd * Math.sqrt(dMul);
       f.bounceBonus = 0;
@@ -2046,6 +2057,9 @@
     for (var s = 0; s < spread; s++) {
       var off = spread > 1 ? (s - (spread - 1) / 2) * arc : 0;
       var a = t.angle + off;
+      // AI 的每一发子弹各自独立散布（见文件顶部 AIM_SCATTER 的说明）。
+      // 玩家没有 aimScatter，打出去就是炮口方向，不受影响。
+      if (t.aimScatter) { a += rnd(-t.aimScatter, t.aimScatter); }
       var dir = { x: Math.cos(a), y: Math.sin(a) };
       var cx = t.gx + dir.x * muzzle;
       var cy = t.gy + dir.y * muzzle;
@@ -2338,9 +2352,10 @@
         }
         var senseX = player.gx + pmv.x * lead;
         var senseY = player.gy + pmv.y * lead;
-        // 瞄准角度加入随机误差
+        // 瞄准角度加入随机误差（只占很小一份，主要误差留给每一发子弹出膛时另抽，
+        // 否则整段时间共享同一个偏差，会打出"连续全空 / 连续全中"的极端节奏）
         var baseAngle = Math.atan2(senseY - t.gy, senseX - t.gx);
-        t.sensedAngle = baseAngle + rnd(-cfg.aimJitter, cfg.aimJitter);
+        t.sensedAngle = baseAngle + rnd(-cfg.aimJitter, cfg.aimJitter) * AIM_WOBBLE;
         t.sensedPos = { x: player.gx + pmv.x * lead, y: player.gy + pmv.y * lead };
         t.hasSeen = true;
         t.lostTimer = 0;
