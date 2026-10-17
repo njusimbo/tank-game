@@ -3298,13 +3298,20 @@
     ctx.globalAlpha = 1;
   }
 
-  // 玩家藏在草里时的"我在这"标记：一圈缓慢呼吸的虚线。
+  // 玩家藏在草里时的"我在这"标记：一圈缓慢呼吸的虚线 + 一层淡淡的底光。
   // 只服务于玩家自己的方位感，不参与任何战斗判定。
   function drawSelfMarker(t) {
     var X = px(t.gx), Y = px(t.gy), R = px(t.r);
     var pulse = 0.5 + 0.5 * Math.sin(performance.now() * 0.004);
     ctx.save();
-    ctx.globalAlpha = 0.35 + pulse * 0.30;
+    // 底光：一小片淡蓝光晕，让轮廓从草叶里"浮出来"
+    ctx.globalAlpha = 0.12 + pulse * 0.10;
+    ctx.fillStyle = '#9fe6ff';
+    ctx.beginPath();
+    ctx.arc(X, Y, R * 1.30, 0, Math.PI * 2);
+    ctx.fill();
+    // 呼吸虚线圈
+    ctx.globalAlpha = 0.55 + pulse * 0.35;
     ctx.strokeStyle = '#9fe6ff';
     ctx.lineWidth = Math.max(1.4, R * 0.13);
     if (ctx.setLineDash) { ctx.setLineDash([R * 0.5, R * 0.42]); }
@@ -3313,6 +3320,19 @@
     ctx.stroke();
     if (ctx.setLineDash) { ctx.setLineDash([]); }
     ctx.restore();
+  }
+
+  // 草叶层是用来"藏"敌人的；把自己也盖住没有任何玩法意义，
+  // 只会让玩家看不清自己的位置和炮口朝向（2026-10-17 玩家反馈）。
+  // 所以：未暴露的玩家在草里时，把自己和标记重画到草叶层之上，
+  // 略带一点透明（保留"我正藏在草里"的感觉），但轮廓和炮口必须看得清。
+  var HIDDEN_SELF_ALPHA = 0.86;
+  function drawSelfOverGrass() {
+    if (state !== 'playing') { return; }
+    if (!player || !player.alive) { return; }
+    if (!inGrass(player) || isExposed(player)) { return; }
+    drawTank(player, HIDDEN_SELF_ALPHA);
+    drawSelfMarker(player);
   }
 
   // 血条 + 护盾条（画在坦克上方）
@@ -3384,6 +3404,7 @@
 
     drawGrassOverlay();     // 草叶盖在坦克上方 —— 这一层才是"藏"的关键
     drawExposeHighlights(); // 刚开火的坦克重新浮到草叶之上（火光把草照亮）
+    drawSelfOverGrass();    // 藏在草里的自己：重画到草叶之上，自己永远看得清
     drawHpBars();
     drawEffects();
 
