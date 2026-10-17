@@ -289,6 +289,21 @@
   .btn.ghost:hover { background: rgba(255, 214, 102, .12); }
   .btn.ghost:active { transform: translateY(2px); box-shadow: none; }
 
+  /* 「从头开始」：比开始按钮小一号，避免和主按钮抢注意力 */
+  .btn.save-restart {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    padding: 7px 18px;
+    margin-top: -2px;
+    opacity: .8;
+  }
+  .btn.save-restart.armed {
+    color: #ffb4b4;
+    border-color: rgba(255, 120, 120, .8);
+    opacity: 1;
+  }
+
   kbd {
     background: rgba(255, 255, 255, .1);
     border: 1px solid rgba(255, 214, 102, .5);
@@ -940,6 +955,7 @@
         <span title="站进草丛里，敌人就看不见你（贴到脸上除外）；但开火会亮枪口火光，暴露 1 秒。敌人躲进去你也看不见它"><i class="dot grass"></i>草丛 · 能藏身 · 开火会暴露</span>
       </div>
       <button class="btn" id="btnStart">开始闯关</button>
+      <button class="btn ghost save-restart" id="btnRestart" style="display:none">从头开始</button>
       <p class="sub" id="bestLine">历史最高：第 1 关</p>
       <p class="sub" style="margin-top:-2px">
         <kbd>A</kbd><kbd>D</kbd> 或 <kbd>←</kbd><kbd>→</kbd> 转车头　<kbd>W</kbd><kbd>S</kbd> 或 <kbd>↑</kbd><kbd>↓</kbd> 前进 / 倒车　<kbd>空格</kbd> 开火　<kbd>P</kbd> 暂停<br>
@@ -1046,6 +1062,7 @@
   var ROUNDS_KEY = 'tank1v1-rounds';     // 每关局数（玩家偏好，持久）
   var DIFF_KEY = 'tank1v1-diff';         // 整体难度（玩家偏好，持久）
   var BGMVOL_KEY = 'tank1v1-bgmvol';     // 背景音量档位 0~100（玩家偏好，持久）
+  var SAVE_KEY = 'tank1v1-run';          // 闯关存档：下次打开可以接着打（跨会话）
 
   // 背景音量档位（玩家侧 0~100）。声明放在这里的原因：
   // loadProgress() 会回填它，而 loadProgress 在启动阶段就被调用 ——
@@ -1217,6 +1234,7 @@
   var overBest = document.getElementById('overBest');
 
   var btnStart = document.getElementById('btnStart');
+  var btnRestart = document.getElementById('btnRestart');
   var btnResume = document.getElementById('btnResume');
   var btnNextRound = document.getElementById('btnNextRound');
   var btnLevelGo = document.getElementById('btnLevelGo');
@@ -1314,7 +1332,8 @@
 
   // ==================== 存档 ====================
   // 闯关模式下，金币 / 升级 / 技能都是「本轮闯关」内的资源，重新开始闯关会清零。
-  // 需要长期保留的只有：历史最高关卡、通关次数、每关局数、整体难度。
+  // 需要长期保留的是：历史最高关卡、通关次数、每关局数、整体难度、背景音量，
+  // 以及「跨会话续关」用的闯关存档（SAVE_KEY）。
   function saveProgress() {
     try {
       localStorage.setItem(BEST_KEY, String(bestLevel));
@@ -1323,6 +1342,94 @@
       localStorage.setItem(DIFF_KEY, String(clampDiff(diffIdx)));
       localStorage.setItem(BGMVOL_KEY, String(bgmVolumePct));
     } catch (e) { /* 隐私模式下静默失败 */ }
+    // 在整备车间里买东西 / 选技能时也顺手刷新存档，
+    // 否则玩家花完金币直接关页面，下次回来会丢掉这些强化。
+    if (prepNextLv > 0) { saveRun(prepNextLv); }
+  }
+
+  // ---------- 闯关存档（跨会话续关）----------
+  // 存档记的是「本关开始前」的状态：关卡号 + 金币 + 升级 + 技能。
+  // 重开时从这一关的第 1 局打起，所以中途赢下的那几局不计入，
+  // 也不会因为反复读档刷金币。
+  var runSave = null;
+  // 整备车间里「即将进入的下一关」。用它来给存档定位，而不是靠 levelNo+1：
+  // enterLevel 在 state 还是 'prep' 时就会跑一遍 saveProgress，
+  // 那时若按 levelNo+1 算，存档会被写到再下一关。
+  var prepNextLv = 0;
+
+  function clearRun() {
+    runSave = null;
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* 忽略 */ }
+  }
+
+  function isBlankRun(lvNo) {
+    if (lvNo > 1 || coins > 0) { return false; }
+    for (var i = 0; i < UPGRADES.length; i++) {
+      if ((upgrades[UPGRADES[i].id] || 0) > 0) { return false; }
+    }
+    for (var j = 0; j < SKILLS.length; j++) {
+      if ((skills[SKILLS[j].id] || 0) > 0) { return false; }
+    }
+    return true;
+  }
+
+  function saveRun(lvNo) {
+    var lv = clamp(lvNo, 1, TOTAL_LEVELS);
+    // 第 1 关的白板状态不值得存 —— 免得主页一上来就显示"继续第 1 关"
+    if (isBlankRun(lv)) { clearRun(); return; }
+    try {
+      var snap = {
+        v: 1,
+        lv: lv,
+        coins: coins,
+        upgrades: upgrades,
+        skills: skills,
+        t: Date.now()
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(snap));
+      // 内存里也留一份深拷贝：startRun(true) 直接拿它恢复，
+      // 不能直接引用 upgrades/skills，否则后续改动会污染存档快照。
+      runSave = {
+        lv: lv,
+        coins: coins,
+        upgrades: JSON.parse(JSON.stringify(upgrades)),
+        skills: JSON.parse(JSON.stringify(skills)),
+        t: snap.t
+      };
+    } catch (e) { /* 忽略 */ }
+  }
+
+  // 读存档并做一次体检：字段缺失 / 数值越界 / 版本不符都当场丢掉，宁可从第 1 关开始
+  function loadRun() {
+    runSave = null;
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) { return; }
+      var d = JSON.parse(raw);
+      if (!d || d.v !== 1) { return; }
+      var lv = parseInt(d.lv, 10);
+      if (!isFinite(lv) || lv < 1 || lv > TOTAL_LEVELS) { return; }
+
+      var up = {}, sks = {};
+      var i, j, k, v;
+      for (i = 0; i < UPGRADES.length; i++) {
+        k = UPGRADES[i].id;
+        v = d.upgrades ? parseInt(d.upgrades[k], 10) : 0;
+        up[k] = isFinite(v) ? clamp(v, 0, UPGRADES[i].maxLv) : 0;
+      }
+      for (j = 0; j < SKILLS.length; j++) {
+        k = SKILLS[j].id;
+        v = d.skills ? parseInt(d.skills[k], 10) : 0;
+        sks[k] = isFinite(v) ? clamp(v, 0, SKILLS[j].maxLv) : 0;
+      }
+      runSave = {
+        lv: lv,
+        coins: Math.max(0, Math.round(Number(d.coins) || 0)),
+        upgrades: up,
+        skills: sks,
+        t: d.t || 0
+      };
+    } catch (e) { runSave = null; }
   }
 
   function loadProgress() {
@@ -3386,26 +3493,43 @@
   }
 
   // 开始一整轮闯关（金币 / 升级 / 技能全部归零）
-  function startRun() {
+  // resume = true 时从存档续关：金币 / 升级 / 技能一并恢复，直接进存档里那一关
+  function startRun(resume) {
     ensureAudio();
     ensureBgm();       // 用户点击「开始闯关」= 首次交互，此时浏览器才允许播放音乐
     tryPlayBgm();
-    coins = 0;
-    runCoins = 0;
+    var useSave = !!(resume && runSave);
+    var i, j;
+
     levelEarned = 0;
     levelPassed = 0;
-    for (var i = 0; i < UPGRADES.length; i++) { upgrades[UPGRADES[i].id] = 0; }
-    for (var j = 0; j < SKILLS.length; j++) { skills[SKILLS[j].id] = 0; }
     levelSnapshot = null;
     phoenixUsed = false;
+    runCoins = 0;
+
+    if (useSave) {
+      coins = runSave.coins;
+      for (i = 0; i < UPGRADES.length; i++) {
+        upgrades[UPGRADES[i].id] = runSave.upgrades[UPGRADES[i].id] || 0;
+      }
+      for (j = 0; j < SKILLS.length; j++) {
+        skills[SKILLS[j].id] = runSave.skills[SKILLS[j].id] || 0;
+      }
+    } else {
+      coins = 0;
+      for (i = 0; i < UPGRADES.length; i++) { upgrades[UPGRADES[i].id] = 0; }
+      for (j = 0; j < SKILLS.length; j++) { skills[SKILLS[j].id] = 0; }
+    }
+
     setWinNeed();
     hide(ovStart); hide(ovOver); hide(ovRound); hide(ovPause);
-    enterLevel(1);
+    enterLevel(useSave ? runSave.lv : 1);
   }
 
   // 进入第 lvNo 关：先记快照，再弹战前简报
   function enterLevel(lvNo) {
     levelNo = clamp(lvNo, 1, TOTAL_LEVELS);
+    prepNextLv = 0;                    // 离开整备车间，清掉"下一关"标记
     winsMe = 0;
     winsFoe = 0;
     roundInLevel = 1;
@@ -3418,6 +3542,9 @@
       upgrades: JSON.parse(JSON.stringify(upgrades)),
       skills: JSON.parse(JSON.stringify(skills))
     };
+
+    // 写续关存档：此刻的关卡号 + 金币/升级/技能，正好是「重打这一关应有的起点」
+    saveRun(levelNo);
 
     // 历史最高关卡
     if (levelNo > bestLevel) { bestLevel = levelNo; saveProgress(); }
@@ -3598,6 +3725,7 @@
   // ==================== 整备车间（技能三选一 + 装备升级）====================
   function openPrep() {
     ensureAudio();
+    prepNextLv = (levelNo < TOTAL_LEVELS) ? (levelNo + 1) : 0;
     rollSkillChoices();
     if (prepBanner) {
       prepBanner.classList.remove('hidden');
@@ -3677,6 +3805,7 @@
 
     skills[id] = sk(id) + 1;
     skillPicked = id;
+    saveProgress();          // 立刻落盘，避免选完技能就关页面丢掉
     sfx.buy();
     toast('学会技能：' + s.name + ' Lv.' + skills[id]);
     renderSkills();
@@ -3707,6 +3836,8 @@
     hide(shopPanel); hide(ovRound); hide(ovLevel);
     shakeT = 0; shakeMag = 0;
     clearCount++;
+    prepNextLv = 0;
+    clearRun();                 // 全通了，续关存档没意义了
     if (bestLevel < TOTAL_LEVELS) { bestLevel = TOTAL_LEVELS; }
     saveProgress();
 
@@ -3778,9 +3909,47 @@
   // ==================== HUD ====================
   function refreshStartInfo() {
     if (!bestLine) { return; }
+
+    var hasSave = !!runSave;
+    if (btnStart) {
+      btnStart.textContent = hasSave ? ('继续闯关 · 第 ' + runSave.lv + ' 关') : '开始闯关';
+    }
+    if (btnRestart) {
+      btnRestart.style.display = hasSave ? '' : 'none';
+      if (!hasSave) { disarmRestart(); }
+      else if (!btnRestart.classList.contains('armed')) {
+        btnRestart.textContent = '从头开始（放弃当前进度）';
+      }
+    }
+
     var s = '历史最高：第 ' + bestLevel + ' 关';
     if (clearCount > 0) { s += '　·　已通关 ' + clearCount + ' 次'; }
+    if (hasSave) { s = '存档：第 ' + runSave.lv + ' 关　·　金币 ' + runSave.coins + '　|　' + s; }
     bestLine.textContent = s;
+  }
+
+  // 「从头开始」需要点两次：第一次只是把按钮变成红色的确认态，3 秒内不点就复原
+  var restartArmTimer = null;
+  function disarmRestart() {
+    if (restartArmTimer) { window.clearTimeout(restartArmTimer); restartArmTimer = null; }
+    if (!btnRestart) { return; }
+    btnRestart.classList.remove('armed');
+    btnRestart.textContent = '从头开始（放弃当前进度）';
+  }
+
+  function onRestartClick() {
+    if (!runSave) { disarmRestart(); return; }
+    if (!btnRestart.classList.contains('armed')) {
+      btnRestart.classList.add('armed');
+      btnRestart.textContent = '再点一次：清空存档并从第 1 关开始';
+      if (restartArmTimer) { window.clearTimeout(restartArmTimer); }
+      restartArmTimer = window.setTimeout(disarmRestart, 3000);
+      return;
+    }
+    disarmRestart();
+    clearRun();
+    refreshStartInfo();
+    sfx.denied();
   }
 
   // ==================== 草丛隐蔽提示 ====================
@@ -3944,6 +4113,7 @@
 
     coins -= cost;
     upgrades[u.id] = lv(u.id) + 1;
+    saveProgress();          // 立刻落盘，避免买完升级就关页面丢掉
     sfx.buy();
     toast(u.name + ' 升到 Lv.' + upgrades[u.id]);
     updateHUD();
@@ -4066,10 +4236,11 @@
   }, { passive: false });
 
   // ==================== 按钮绑定 ====================
-  btnStart.addEventListener('click', function () { startRun(); });
+  btnStart.addEventListener('click', function () { startRun(!!runSave); });
+  if (btnRestart) { btnRestart.addEventListener('click', onRestartClick); }
   btnResume.addEventListener('click', function () { togglePause(); });
   btnNextRound.addEventListener('click', function () { nextRound(); });
-  btnAgain.addEventListener('click', function () { hide(ovOver); startRun(); });
+  btnAgain.addEventListener('click', function () { hide(ovOver); startRun(false); });
   btnPause.addEventListener('click', function () { togglePause(); });
   btnLevelGo.addEventListener('click', function () { startLevelRound(); });
   // 返回主页（顶栏图标 + 三个面板里的按钮）
@@ -4177,6 +4348,7 @@
 
   // ==================== 启动 ====================
   loadProgress();
+  loadRun();                 // 闯关存档（续关用），必须在 refreshStartInfo 之前读
   resize();
 
   // 依据存档恢复局数 / 难度选中态
@@ -4604,6 +4776,24 @@
       },
       diffs: function () {
         return DIFFS.map(function (d) { return { id: d.id, name: d.name, mul: d.mul }; });
+      },
+      // 测试用：闯关存档
+      getRunSave: function () {
+        return runSave ? JSON.parse(JSON.stringify(runSave)) : null;
+      },
+      saveRun: saveRun,
+      loadRun: loadRun,
+      clearRun: clearRun,
+      refreshStartInfo: refreshStartInfo,
+      getStartText: function () {
+        return {
+          btn: btnStart ? btnStart.textContent : '',
+          restart: btnRestart ? {
+            visible: btnRestart.style.display !== 'none',
+            text: btnRestart.textContent
+          } : null,
+          line: bestLine ? bestLine.textContent : ''
+        };
       },
       // 测试用：读取震动状态（用于验证结算时震动已归零）
       getShake: function () { return { t: shakeT, mag: shakeMag }; },
