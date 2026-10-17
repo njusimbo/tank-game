@@ -843,6 +843,153 @@
     flex-wrap: wrap;
     justify-content: center;
   }
+
+  /* ---------- 首页：模式选择 ---------- */
+  .mode-pane {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+  }
+  .mode-pane.hidden { display: none; }
+  .mode-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 6px 0 2px;
+    width: 100%;
+    max-width: 580px;
+  }
+  .mode-card {
+    flex: 1 1 0;
+    min-width: 200px;
+    max-width: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 16px 14px;
+    cursor: pointer;
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    font-family: inherit;
+    transition: transform .12s, border-color .12s, box-shadow .12s;
+  }
+  .mode-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 214, 102, .55);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+  }
+  .mode-ico { font-size: 30px; line-height: 1; }
+  .mode-card b { font-size: 15.5px; letter-spacing: .05em; }
+  .mode-desc { font-size: 11.5px; color: var(--ink-soft); line-height: 1.55; }
+  .mode-card.p1:hover { border-color: rgba(78, 205, 196, .6); }
+  .mode-card.p2:hover { border-color: rgba(255, 169, 77, .6); }
+  .mode-card:disabled,
+  .mode-card.locked {
+    opacity: .45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* ---------- 双人：购买 / 升级面板 ---------- */
+  /* 内容比战场高得多：顶部对齐，否则 justify-content:center 会把上半截裁到滚动区外 */
+  .overlay.duel-overlay { justify-content: flex-start; padding-top: 16px; }
+  .duel-head {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    font-size: 12.5px;
+    letter-spacing: .05em;
+    color: var(--ink-soft);
+  }
+  .duel-score {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: .08em;
+  }
+  .duel-cols {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+  }
+  .duel-col {
+    flex: 1 1 0;
+    min-width: 0;
+    background: rgba(255, 255, 255, .035);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 9px 9px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .duel-col.p1 { border-color: rgba(78, 205, 196, .38); }
+  .duel-col.p2 { border-color: rgba(255, 169, 77, .38); }
+  .duel-col-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .06em;
+  }
+  .duel-col.p1 .duel-col-head { color: var(--teal); }
+  .duel-col.p2 .duel-col-head { color: #ffa94d; }
+  .key-hint { font-size: 10px; font-weight: 400; color: var(--ink-soft); letter-spacing: 0; }
+  .duel-balance { font-size: 12px; color: var(--gold); }
+  .duel-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 5px;
+    max-height: 46vh;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .duel-card {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--ink);
+    text-align: left;
+    transition: border-color .12s, background .12s, transform .08s;
+  }
+  .duel-card:hover { border-color: rgba(255, 214, 102, .45); }
+  .duel-card:active { transform: scale(.985); }
+  .duel-card.owned { border-color: rgba(78, 205, 196, .5); background: rgba(78, 205, 196, .08); }
+  .duel-card.picked { border-color: var(--gold); background: rgba(255, 214, 102, .14); }
+  .duel-card.locked { opacity: .38; cursor: not-allowed; }
+  .dc-ico { font-size: 15px; width: 20px; text-align: center; flex: 0 0 auto; }
+  .dc-main { flex: 1 1 auto; min-width: 0; }
+  .dc-name { font-size: 12px; font-weight: 600; display: flex; gap: 5px; align-items: baseline; }
+  .dc-lv { font-size: 10px; color: var(--teal); }
+  .dc-desc { font-size: 10px; color: var(--ink-soft); line-height: 1.35; }
+  .dc-price { font-size: 11px; color: var(--gold); flex: 0 0 auto; letter-spacing: .02em; }
+  .duel-ok { width: 100%; margin-top: 2px; }
+  .duel-ok.done { background: linear-gradient(180deg, #2f8f74, #237158); color: #eafff8; }
+  .duel-actions { display: flex; gap: 8px; justify-content: center; }
+  .duel-tip { font-size: 11px; color: var(--ink-soft); line-height: 1.6; text-align: center; }
+
+  @media (max-width: 620px) {
+    .duel-cols { flex-direction: column; }
+    .duel-cards { max-height: 24vh; }
+    .mode-card { flex: 1 1 100%; max-width: none; }
+  }
 </style>
 </head>
 <body>
@@ -856,22 +1003,22 @@
 
   <div class="hud">
     <div class="chip round">
-      <span class="label">关卡</span>
+      <span class="label" id="uiLevelLabel">关卡</span>
       <span class="value" id="uiLevel">1 / 15</span>
     </div>
     <div class="chip round">
-      <span class="label">本关比分</span>
+      <span class="label" id="uiRoundLabel">本关比分</span>
       <span class="value" id="uiRound">0 : 0</span>
     </div>
     <div class="chip p-score">
-      <span class="label">我的血量 <span class="mini" id="uiLifeShield"></span></span>
+      <span class="label"><span id="uiLifeLabel">我的血量</span> <span class="mini" id="uiLifeShield"></span></span>
       <span class="value" id="uiLife">3</span>
     </div>
     <div class="chip e-score">
-      <span class="label">敌方 <span class="mini" id="uiFoeLv">×0/0</span></span>
+      <span class="label"><span id="uiFoeLabel">敌方</span> <span class="mini" id="uiFoeLv">×0/0</span></span>
       <span class="value" id="uiFoeHp">0</span>
     </div>
-    <div class="chip coin">
+    <div class="chip coin" id="chipCoins">
       <span class="label">金币</span>
       <span class="value" id="uiCoins">0</span>
     </div>
@@ -912,8 +1059,28 @@
       <div class="shop-toast" id="shopToast"></div>
     </div>
 
-    <!-- 开始 -->
+    <!-- 开始：第一步先选玩法（人机闯关 / 双人对战） -->
     <div class="overlay" id="ovStart">
+
+      <div class="mode-pane" id="modePick">
+        <h2>坦克动荡</h2>
+        <p class="sub">选一种玩法</p>
+        <div class="mode-row">
+          <button class="mode-card p1" id="btnModeCampaign">
+            <span class="mode-ico">🎯</span>
+            <b>人机闯关</b>
+            <span class="mode-desc">15 关逐步变强，和 AI 对打<br>手机也能玩</span>
+          </button>
+          <button class="mode-card p2" id="btnModeDuel">
+            <span class="mode-ico">⚔</span>
+            <b>双人对战</b>
+            <span class="mode-desc">同屏两人对轰，开局各买技能<br>需要键盘 · 手机端暂不支持</span>
+          </button>
+        </div>
+        <p class="sub" style="opacity:.7;font-size:11.5px">双人对战：两个人共用一台电脑 —— P1 用 WASD + 空格，P2 用方向键 + 回车</p>
+      </div>
+
+      <div class="mode-pane hidden" id="campaignPanel">
       <h2>坦克动荡 · 闯关</h2>
       <p class="sub">
         一共 <b>15 关</b>。每关打若干局，<b>赢下多数</b>就能过这一关。<br>
@@ -961,6 +1128,56 @@
         <kbd>A</kbd><kbd>D</kbd> 或 <kbd>←</kbd><kbd>→</kbd> 转车头　<kbd>W</kbd><kbd>S</kbd> 或 <kbd>↑</kbd><kbd>↓</kbd> 前进 / 倒车　<kbd>空格</kbd> 开火　<kbd>P</kbd> 暂停<br>
         <span style="opacity:.72">炮筒始终朝车头方向 —— 想打哪里，就把车头转过去</span>
       </p>
+      <button class="btn ghost" id="btnBackMode">← 换一种玩法</button>
+      </div><!-- /campaignPanel -->
+    </div>
+
+    <!-- 双人对战：买技能 / 每局升级（左右两列，各自操作自己那一列） -->
+    <div class="overlay duel-overlay hidden" id="duelPanel">
+      <h2 id="duelTitle">双人对战</h2>
+      <p class="sub" id="duelSub"></p>
+      <div class="duel-head">
+        <span id="duelRoundLabel">第 1 / 5 局</span>
+        <span class="duel-score" id="duelScoreLabel">0 : 0</span>
+        <span id="duelPhaseLabel">第 1 步 · 购买技能</span>
+      </div>
+      <div class="tier-pick" id="duelRoundPick">
+        <span class="rp-label">总局数</span>
+        <button data-drounds="3">3 局</button>
+        <button data-drounds="5" class="on">5 局</button>
+        <button data-drounds="7">7 局</button>
+        <button data-drounds="9">9 局</button>
+        <span class="tp-hint">先到半数以上即胜 · 改动会重置购买</span>
+      </div>
+      <div class="duel-cols">
+        <div class="duel-col p1">
+          <div class="duel-col-head"><span>P1 · 青色</span><span class="key-hint">W A S D + 空格</span></div>
+          <div class="duel-balance">💰 余额 <b id="duelCoins1">1000</b></div>
+          <div class="duel-cards" id="duelCards1"></div>
+          <button class="btn duel-ok" id="duelOk1">我买好了</button>
+        </div>
+        <div class="duel-col p2">
+          <div class="duel-col-head"><span>P2 · 橙色</span><span class="key-hint">方向键 + 回车</span></div>
+          <div class="duel-balance">💰 余额 <b id="duelCoins2">1000</b></div>
+          <div class="duel-cards" id="duelCards2"></div>
+          <button class="btn duel-ok" id="duelOk2">我买好了</button>
+        </div>
+      </div>
+      <p class="duel-tip" id="duelTip"></p>
+      <div class="duel-actions">
+        <button class="btn ghost" id="btnDuelBack">返回首页</button>
+      </div>
+    </div>
+
+    <!-- 双人：单局结束 -->
+    <div class="overlay hidden" id="ovDuel">
+      <h2 id="duelEndTitle">本局结束</h2>
+      <p class="sub" id="duelEndSub"></p>
+      <div class="big" id="duelEndScore">0 : 0</div>
+      <div class="btn-row">
+        <button class="btn" id="btnDuelNext">下一局</button>
+        <button class="btn ghost" id="btnDuelHome">返回首页</button>
+      </div>
     </div>
 
     <!-- 关卡战前简报：本关敌人增强了什么 -->
@@ -1044,6 +1261,12 @@
   // 子弹出生点仍是 t.r + BULLET_R（见 fire），远短于炮口，而子弹是在坦克之前
   // 绘制的（见 draw），所以子弹会被炮管盖住，看起来就是从炮口里飞出来的。
   var BARREL_LEN = 1.30;             // 老值 1.06（2026-10-17 玩家要求炮管长一点）
+  // ---- 双人对战 ----
+  // 双方开局拿到完全相同的金币额度，各自在开打前买技能（价格见 SKILLS 的 price）。
+  // 之后每一局开打前，各能免费把「已买过的一个技能」+1 级 —— 买得少则专精，买得多则全面。
+  var DUEL_BUDGET = 1000;            // 每人开局金币
+  var DUEL_ROUNDS = [3, 5, 7, 9];    // 可选总局数
+  var DUEL_DEFAULT_ROUNDS = 5;       // 默认 5 局 3 胜
   // ---- AI 瞄准手感 ----
   // 老做法：每隔 reactMs 抽一个「瞄准角偏差」，这一整段时间内偏差固定不变。
   //   后果 = 只要这次抽偏了，这段时间里每一发都偏；抽正了，每一发都中
@@ -1175,16 +1398,18 @@
   //      机动向：涡轮引擎
   //      地形向：弹跳大师 / 穿墙弹
   //      经济向：磁力吸金
+  // price = 双人对战的每级价格（闯关模式用不上；越强的技能越贵）。
+  // 双人里没有金币掉落与商店，磁力吸金（greed）无意义，故不给价格 = 不出现在双人商店。
   var SKILLS = [
-    { id: 'spread',   name: '散射弹幕', icon: '⋔', maxLv: 3, desc: '每次开火多射出 1 发扇形子弹' },
-    { id: 'plating',  name: '装甲强化', icon: '🛡', maxLv: 4, desc: '血量上限 +1，每局开局额外 +1 点护盾' },
-    { id: 'bounce',   name: '弹跳大师', icon: '↻', maxLv: 3, desc: '子弹额外多反弹 1 次' },
-    { id: 'pierce',   name: '穿墙弹',   icon: '⌖', maxLv: 3, desc: '子弹可穿透钢墙（砖墙仍会炸碎），每级多穿 1 面' },
-    { id: 'rapid',    name: '急速装填', icon: '⏱', maxLv: 4, desc: '开火冷却 -13%' },
-    { id: 'turbo',    name: '涡轮引擎', icon: '⚡', maxLv: 4, desc: '移动速度 +13%' },
-    { id: 'velocity', name: '穿甲弹头', icon: '➤', maxLv: 4, desc: '子弹速度 +15%' },
-    { id: 'greed',    name: '磁力吸金', icon: '🧲', maxLv: 3, desc: '金币收益 +30%，拾取范围更大' },
-    { id: 'phoenix',  name: '不死鸟',   icon: '🔥', maxLv: 3, desc: '击毁敌方回 1 血；每关首次阵亡以 1 血复活（各 1 级起效）' }
+    { id: 'spread',   name: '散射弹幕', icon: '⋔', maxLv: 3, price: 220, desc: '每次开火多射出 1 发扇形子弹' },
+    { id: 'plating',  name: '装甲强化', icon: '🛡', maxLv: 4, price: 200, desc: '血量上限 +1，每局开局额外 +1 点护盾' },
+    { id: 'bounce',   name: '弹跳大师', icon: '↻', maxLv: 3, price: 120, desc: '子弹额外多反弹 1 次' },
+    { id: 'pierce',   name: '穿墙弹',   icon: '⌖', maxLv: 3, price: 190, desc: '子弹可穿透钢墙（砖墙仍会炸碎），每级多穿 1 面' },
+    { id: 'rapid',    name: '急速装填', icon: '⏱', maxLv: 4, price: 170, desc: '开火冷却 -13%' },
+    { id: 'turbo',    name: '涡轮引擎', icon: '⚡', maxLv: 4, price: 150, desc: '移动速度 +13%' },
+    { id: 'velocity', name: '穿甲弹头', icon: '➤', maxLv: 4, price: 110, desc: '子弹速度 +15%' },
+    { id: 'greed',    name: '磁力吸金', icon: '🧲', maxLv: 3, price: 0,   desc: '金币收益 +30%，拾取范围更大' },
+    { id: 'phoenix',  name: '不死鸟',   icon: '🔥', maxLv: 3, price: 160, desc: '击毁敌方回 1 血；每关首次阵亡以 1 血复活（各 1 级起效）' }
   ];
 
   // ---------- 商店升级配置（只放 UI 需要的字段，数值公式统一写在 applyUpgrades）----------
@@ -1209,6 +1434,11 @@
   var uiFoeHp = document.getElementById('uiFoeHp');
   var uiFoeLv = document.getElementById('uiFoeLv');
   var uiCoins = document.getElementById('uiCoins');
+  var uiLevelLabel = document.getElementById('uiLevelLabel');
+  var uiRoundLabel = document.getElementById('uiRoundLabel');
+  var uiLifeLabel = document.getElementById('uiLifeLabel');
+  var uiFoeLabel = document.getElementById('uiFoeLabel');
+  var chipCoins = document.getElementById('chipCoins');
 
   var btnShop = document.getElementById('btnShop');
   var btnSound = document.getElementById('btnSound');
@@ -1265,6 +1495,33 @@
 
   var bestLine = document.getElementById('bestLine');
 
+  // ---------- 模式选择 / 双人对战 ----------
+  var modePick = document.getElementById('modePick');
+  var campaignPanel = document.getElementById('campaignPanel');
+  var btnModeCampaign = document.getElementById('btnModeCampaign');
+  var btnModeDuel = document.getElementById('btnModeDuel');
+  var btnBackMode = document.getElementById('btnBackMode');
+  var duelPanel = document.getElementById('duelPanel');
+  var duelTitle = document.getElementById('duelTitle');
+  var duelSub = document.getElementById('duelSub');
+  var duelRoundLabel = document.getElementById('duelRoundLabel');
+  var duelScoreLabel = document.getElementById('duelScoreLabel');
+  var duelPhaseLabel = document.getElementById('duelPhaseLabel');
+  var duelCoins1 = document.getElementById('duelCoins1');
+  var duelCoins2 = document.getElementById('duelCoins2');
+  var duelCards1 = document.getElementById('duelCards1');
+  var duelCards2 = document.getElementById('duelCards2');
+  var duelOk1 = document.getElementById('duelOk1');
+  var duelOk2 = document.getElementById('duelOk2');
+  var duelTip = document.getElementById('duelTip');
+  var btnDuelBack = document.getElementById('btnDuelBack');
+  var ovDuel = document.getElementById('ovDuel');
+  var duelEndTitle = document.getElementById('duelEndTitle');
+  var duelEndSub = document.getElementById('duelEndSub');
+  var duelEndScore = document.getElementById('duelEndScore');
+  var btnDuelNext = document.getElementById('btnDuelNext');
+  var btnDuelHome = document.getElementById('btnDuelHome');
+
   var shopPanel = document.getElementById('shopPanel');
   var shopTitle = document.getElementById('shopTitle');
   var shopRow = document.getElementById('shopRow');
@@ -1288,11 +1545,18 @@
     for (var y = 0; y < ROWS; y++) { grid.push(new Array(COLS).fill(0)); }
   })();
   var player = null;
+  var player2 = null;                // 双人对战的 2 号玩家（人机模式恒为 null）
   var foes = [];                     // AI 对手（1~3 台）
   var bullets = [];
   var effects = [];
   var floats = [];
   var dropCoins = [];
+
+  // ==================== 双人对战数据 ====================
+  // mode：campaign = 人机闯关（原有玩法，完全不变）| duel = 同屏双人对战
+  var mode = 'campaign';
+  // duel 为 null 表示不在双人对局里；结构见 newDuel()
+  var duel = null;
 
   // start | brief | playing | paused | roundover | prep | over
   var state = 'start';
@@ -1782,7 +2046,12 @@
 
   // ==================== 实体创建 ====================
   // 坦克：gx,gy 为中心点（浮点格坐标），朝向用角度 angle（弧度）
-  function makeTank(isPlayer, gx, gy, angle) {
+  // side：'A' / 'B' 两个阵营。子弹只会伤害「敌对方」，
+  //   所以同一阵营的多台 AI 不会互相误伤（和改动前的行为一致）。
+  // pIndex：1 / 2 = 人类玩家编号，0 = AI。human 标记这台坦克是否由人操控。
+  function makeTank(isPlayer, gx, gy, angle, side, pIndex) {
+    var sd = side || (isPlayer ? 'A' : 'B');
+    var pi = (typeof pIndex === 'number') ? pIndex : (isPlayer ? 1 : 0);
     return {
       gx: gx, gy: gy,               // 中心点
       r: TANK / 2,                  // 半径
@@ -1807,7 +2076,10 @@
       exposeT: 0,                   // 剩余暴露时间（毫秒）：在草里开火会被枪口火光暴露
       alive: true,
       isPlayer: !!isPlayer,
-      color: isPlayer ? '#4ecdc4' : '#ff6b6b',
+      side: sd,
+      pIndex: pi,
+      human: pi > 0,
+      color: pi === 2 ? '#ffa94d' : (isPlayer ? '#4ecdc4' : '#ff6b6b'),
       // AI 专用
       aiTimer: 0,
       aiGoal: null,
@@ -1816,56 +2088,72 @@
     };
   }
 
+  // 场上所有坦克（人机模式 = 玩家 + 敌人；双人模式 = 两个人类）
+  function allTanks() {
+    var arr = [];
+    if (player) { arr.push(player); }
+    if (player2) { arr.push(player2); }
+    for (var i = 0; i < foes.length; i++) { arr.push(foes[i]); }
+    return arr;
+  }
+
   // 把「商店升级 + 技能」套用到玩家坦克属性上。
   // 数值公式集中在这里，避免和商店 UI 的两处定义打架。
+  // 双人对战：坦克可带自己的 loadout = { upgrades:{}, skills:{} }，
+  // 此时不读全局 upgrades/skills —— 否则两个人会共用同一套配置。
   function applyUpgrades(t) {
     if (!t) { return; }
     var beforeMax = t.maxHp;
+    var LO = t.loadout || null;
+    function _lv(id) { return LO ? (LO.upgrades[id] || 0) : lv(id); }
+    function _sk(id) { return LO ? (LO.skills[id] || 0) : sk(id); }
 
     // 血量：基础 3 + 装甲每级 1 + 装甲强化技能每级 1
-    t.maxHp = BASE_HP + lv('armor') + sk('plating');
+    t.maxHp = BASE_HP + _lv('armor') + _sk('plating');
 
     // 移动速度：引擎每级 +12%，涡轮技能每级 +13%
-    t.speed = P_SPEED * (1 + lv('speed') * 0.12) * (1 + sk('turbo') * 0.13);
+    t.speed = P_SPEED * (1 + _lv('speed') * 0.12) * (1 + _sk('turbo') * 0.13);
 
     // 转向灵活度：传动每级 +12%
-    t.turnRate = TURN_SPEED * 1000 * (1 + lv('turn') * 0.12);
+    t.turnRate = TURN_SPEED * 1000 * (1 + _lv('turn') * 0.12);
 
     // 散射：散射弹幕技能每级多 1 发
-    t.spread = 1 + sk('spread');
+    t.spread = 1 + _sk('spread');
     t.spreadArc = SPREAD_ARC;
 
     // 同屏子弹上限 = 组数 × 每组发数
-    t.maxBullets = (1 + lv('ammo')) * t.spread;
+    t.maxBullets = (1 + _lv('ammo')) * t.spread;
 
     // 弹速：火药每级 +16%，穿甲弹头技能每级 +15%
-    t.bulletSpeedMul = (1 + lv('bullet') * 0.16) * (1 + sk('velocity') * 0.15);
+    t.bulletSpeedMul = (1 + _lv('bullet') * 0.16) * (1 + _sk('velocity') * 0.15);
 
     // 反弹次数：火药 2 级起 +1、4 级 +2；弹跳大师每级 +1
     var bb = 0;
-    if (lv('bullet') >= 4) { bb = 2; } else if (lv('bullet') >= 2) { bb = 1; }
-    t.bounceBonus = bb + sk('bounce');
+    if (_lv('bullet') >= 4) { bb = 2; } else if (_lv('bullet') >= 2) { bb = 1; }
+    t.bounceBonus = bb + _sk('bounce');
 
     // 穿墙：穿墙弹技能每级可穿透 1 面钢墙（砖墙不受影响，照常炸碎）
-    t.pierceMax = sk('pierce');
+    t.pierceMax = _sk('pierce');
 
     // 开火冷却：装填每级 -12%，急速装填技能每级 ×0.87
-    t.fireCd = FIRE_CD * (1 - lv('reload') * 0.12) * Math.pow(0.87, sk('rapid'));
+    t.fireCd = FIRE_CD * (1 - _lv('reload') * 0.12) * Math.pow(0.87, _sk('rapid'));
 
     // 护盾：装甲强化技能每级 +1（与血量上限同源，避免两个技能功能重合）
     // 护盾值本身只在每局开局由 initPlayer 补满，避免战斗中买东西时白送一格护盾
-    t.shieldMax = sk('plating');
+    t.shieldMax = _sk('plating');
 
     // 磁力吸金 / 不死鸟（击杀回血 + 每关一次复活）
-    t.coinMul = 1 + sk('greed') * 0.30;
-    t.magnetRange = 2.2 + sk('greed') * 1.1;
-    t.leech = sk('phoenix') > 0 ? 1 : 0;
+    t.coinMul = 1 + _sk('greed') * 0.30;
+    t.magnetRange = 2.2 + _sk('greed') * 1.1;
+    t.leech = _sk('phoenix') > 0 ? 1 : 0;
 
-    // 不死鸟的「复活机会」：只在玩家身上有意义。
+    // 不死鸟的「复活机会」：只在人类玩家身上有意义。
     // 统一在这里兜底 —— 无论从 initPlayer 还是整备车间学技能进来，
     // 只要本关还没用掉复活，就把机会补上（避免"刚买的技能当场不生效"）。
-    if (t.isPlayer) {
-      if (sk('phoenix') <= 0) { t._phoenixReady = false; }
+    // 双人模式下每个玩家各自每局一次（由 initDuel 重置 _phoenixReady）。
+    if (t.human) {
+      if (_sk('phoenix') <= 0) { t._phoenixReady = false; }
+      else if (LO) { t._phoenixReady = true; }
       else if (!phoenixUsed) { t._phoenixReady = true; }
     }
 
@@ -1876,7 +2164,7 @@
   }
 
   function initPlayer() {
-    player = makeTank(true, 2.5, 2.5, Math.PI * 0.25);
+    player = makeTank(true, 2.5, 2.5, Math.PI * 0.25, 'A', 1);
     player.hp = BASE_HP;
     player.maxHp = BASE_HP;
     applyUpgrades(player);
@@ -1884,6 +2172,63 @@
     player.shield = player.shieldMax;
     // 不死鸟的复活部分：每「关」只生效一次
     player._phoenixReady = (sk('phoenix') > 0 && !phoenixUsed);
+  }
+
+  // ==================== 双人对战：坦克与对局 ====================
+  // 双人完全不用金币/商店那套（UPGRADES），只吃 SKILLS —— 每人一份独立技能表。
+  function initDuelPlayer(idx) {
+    var isA = (idx === 1);
+    var spawn = isA
+      ? { x: 2.5, y: 2.5, a: Math.PI * 0.25 }
+      : { x: COLS - 2.5, y: ROWS - 2.5, a: Math.PI * 1.25 };
+    var t = makeTank(isA, spawn.x, spawn.y, spawn.a, isA ? 'A' : 'B', idx);
+    t.loadout = { upgrades: {}, skills: (duel.p[idx - 1].skills || {}) };
+    applyUpgrades(t);
+    t.hp = t.maxHp;
+    t.shield = t.shieldMax;
+    t.spawnAnim = 0;          // 双方同时开打，不留出场保护（谁先开枪都不吃亏）
+    t._phoenixReady = (t.loadout.skills.phoenix || 0) > 0;   // 每局一次复活
+    return t;
+  }
+
+  function newDuel(totalRounds) {
+    var p = [];
+    for (var i = 0; i < 2; i++) {
+      p.push({
+        coins: DUEL_BUDGET,     // 每人额度完全相同
+        skills: {},             // 已买到的技能等级
+        bought: {},             // 买过哪些技能（每局升级只能从这里面选）
+        ready: false,           // 购买阶段是否已点「我买好了」
+        pick: null              // 本局准备阶段选中的升级技能
+      });
+    }
+    var total = clamp(totalRounds || DUEL_DEFAULT_ROUNDS, 1, 99);
+    return {
+      totalRounds: total,
+      needWins: Math.floor(total / 2) + 1,   // 先到半数以上即胜（5 局 3 胜）
+      score: [0, 0],
+      p: p,
+      round: 1
+    };
+  }
+
+  // 双人开一局（双方血量、技能、弹药全部重置）
+  function startDuelRound() {
+    hide(ovLevel); hide(ovRound); hide(ovStart); hide(ovPause); hide(ovOver);
+    genStage();
+    player = initDuelPlayer(1);
+    player2 = initDuelPlayer(2);
+    foes = [];
+    bullets = [];
+    effects = [];
+    floats = [];
+    dropCoins = [];
+    shakeT = 0; shakeMag = 0;
+    state = 'playing';
+    syncBgmToState();
+    lastTime = performance.now();
+    addFloat(COLS / 2, ROWS / 2, '第 ' + duel.round + ' 局', '#b8a1ff');
+    updateHUD();
   }
 
   // ==================== 敌方坦克生成 ====================
@@ -1906,7 +2251,7 @@
     var n = clamp(cfg.foes, 1, spots.length);
 
     for (var i = 0; i < n; i++) {
-      var f = makeTank(false, spots[i].x, spots[i].y, spots[i].a);
+      var f = makeTank(false, spots[i].x, spots[i].y, spots[i].a, 'B', 0);
 
       // 敌方体型倍率：越早的关卡敌人越大 = 越好瞄准命中，降低开局挫败感；
       // 后期略收小，把"更难打中"作为难度的一部分。
@@ -1965,6 +2310,7 @@
   // 但同一关的第 2、3 局必须立刻可被击中，否则 AI 也会被自己的保护期卡住不还手。
   function endSpawnGrace() {
     if (player) { player.spawnAnim = 0; }
+    if (player2) { player2.spawnAnim = 0; }
     for (var i = 0; i < foes.length; i++) { foes[i].spawnAnim = 0; }
   }
 
@@ -2154,9 +2500,9 @@
 
   // 玩家 ↔ 每台敌人，以及敌人 ↔ 敌人
   function resolveTankCollision() {
-    for (var i = 0; i < foes.length; i++) { pushApart(player, foes[i]); }
-    for (var j = 0; j < foes.length; j++) {
-      for (var k = j + 1; k < foes.length; k++) { pushApart(foes[j], foes[k]); }
+    var pool = allTanks();
+    for (var i = 0; i < pool.length; i++) {
+      for (var j = i + 1; j < pool.length; j++) { pushApart(pool[i], pool[j]); }
     }
   }
 
@@ -2212,6 +2558,7 @@
         vy: dir.y * spd,
         speed: spd,
         owner: t,
+        side: t.side,                // 只伤害敌对方（AI 之间不会误伤；双人则互相能打中）
         fromPlayer: !!t.isPlayer,
         bounces: 0,
         maxBounce: maxBounce,
@@ -2354,14 +2701,16 @@
         }
 
         // ---- 打坦克 ----
+        // 改法（2026-10-17 双人模式）：不再"玩家打敌人 / 敌人打玩家"二选一，
+        // 而是遍历场上所有坦克，只打「不同阵营」的 —— 双人模式下两人自然互相能打中，
+        // 而同一阵营的多台 AI 仍然不会误伤队友（和改动前完全一致）。
         var victim = null;
-        if (b.fromPlayer) {
-          for (var fi = 0; fi < foes.length; fi++) {
-            var ft = foes[fi];
-            if (ft.alive && ft.spawnAnim <= 0 && circleHitTank(b, ft)) { victim = ft; break; }
-          }
-        } else {
-          if (player && player.alive && player.spawnAnim <= 0 && circleHitTank(b, player)) { victim = player; }
+        var pool = allTanks();
+        for (var ti = 0; ti < pool.length; ti++) {
+          var ft = pool[ti];
+          if (!ft || ft === b.owner) { continue; }
+          if (ft.side === b.side) { continue; }
+          if (ft.alive && ft.spawnAnim <= 0 && circleHitTank(b, ft)) { victim = ft; break; }
         }
 
         if (victim) {
@@ -2409,10 +2758,10 @@
     sfx.hitPlayer();
 
     if (t.hp <= 0) {
-      // ---- 不死鸟技能：每关第一次阵亡时以 1 点血量复活 ----
-      if (t.isPlayer && t._phoenixReady) {
+      // ---- 不死鸟技能：每局第一次阵亡时以 1 点血量复活 ----
+      if (t.human && t._phoenixReady) {
         t._phoenixReady = false;
-        phoenixUsed = true;
+        if (mode === 'campaign') { phoenixUsed = true; }
         t.hp = 1;
         t.alive = true;
         t.spawnAnim = 1.2;
@@ -2432,6 +2781,12 @@
       sfx.explode();
       shake(0.42, 10);
 
+      // ---- 双人对战：先阵亡的一方输掉本局 ----
+      if (mode === 'duel') {
+        endDuelRound(t.pIndex === 1 ? 2 : 1);
+        return;
+      }
+
       // 玩家阵亡 → 本局判负
       if (t.isPlayer) { endRound('foe'); return; }
 
@@ -2447,9 +2802,11 @@
         });
       }
       // ---- 不死鸟（击杀回血部分）：击毁后回 1 点血 ----
-      if (player && player.alive && player.leech > 0 && player.hp < player.maxHp) {
-        player.hp = Math.min(player.maxHp, player.hp + 1);
-        addFloat(player.gx, player.gy - player.r - 0.5, '+1 HP', '#7dffa8');
+      // 用 b.owner 而不是写死 player —— 双人模式下谁打死的人谁回血。
+      var killer = b && b.owner;
+      if (killer && killer.alive && killer.leech > 0 && killer.hp < killer.maxHp) {
+        killer.hp = Math.min(killer.maxHp, killer.hp + 1);
+        addFloat(killer.gx, killer.gy - killer.r - 0.5, '+1 HP', '#7dffa8');
       }
       updateHUD();
 
@@ -2711,8 +3068,11 @@
   }
 
   // observer 能否看见 target：草丛藏身优先于视线判定
+  // 双人对战：两个人盯的是同一块屏幕，草藏不住任何人（否则等于给其中一方开视野挂），
+  // 所以这里直接返回 true —— 双人局的草丛只是掩体装饰，不再是隐身点。
   function canSee(observer, target) {
     if (!observer || !target || !target.alive || !observer.alive) { return false; }
+    if (mode === 'duel') { return true; }
     var d = len(target.gx - observer.gx, target.gy - observer.gy);
     // 目标藏在草里，且没贴到脸上 → 看不见。
     // 例外：刚开过火（exposeT > 0）→ 枪口火光把位置暴露了，草藏不住。
@@ -3329,6 +3689,13 @@
   var HIDDEN_SELF_ALPHA = 0.86;
   function drawSelfOverGrass() {
     if (state !== 'playing') { return; }
+    // 双人：草丛不隐身，两台坦克都应该清楚地压在草叶之上。
+    // 这里不加"我在这"标记 —— 同屏两人，标记只会让画面变乱。
+    if (mode === 'duel') {
+      if (player && player.alive) { drawTank(player, 1); }
+      if (player2 && player2.alive) { drawTank(player2, 1); }
+      return;
+    }
     if (!player || !player.alive) { return; }
     if (!inGrass(player) || isExposed(player)) { return; }
     drawTank(player, HIDDEN_SELF_ALPHA);
@@ -3337,7 +3704,7 @@
 
   // 血条 + 护盾条（画在坦克上方）
   function drawHpBars() {
-    var list = [player];
+    var list = [player, player2];    // 双人：两条血条都要显示（player2 在人机模式下是 null）
     for (var i = 0; i < foes.length; i++) { list.push(foes[i]); }
     for (var j = 0; j < list.length; j++) {
       var t = list[j];
@@ -3392,6 +3759,7 @@
     var playerHidden = playerInGrassNow && !isExposed(player);
     if (player) { drawTank(player, playerHidden ? 0.5 : 1); }
     if (playerHidden) { drawSelfMarker(player); }
+    if (player2) { drawTank(player2, 1); }        // 双人：2 号玩家
 
     for (var fi = 0; fi < foes.length; fi++) {
       var foe = foes[fi];
@@ -3416,6 +3784,55 @@
 
   // ==================== 更新 ====================
   var keys = { up: false, down: false, left: false, right: false, fire: false };
+  // 双人对战的 P2 键位：方向键 + 回车（P1 则固定用 WASD + 空格，避免抢同一个键）
+  var keys2 = { up: false, down: false, left: false, right: false, fire: false };
+
+  // 人类坦克的一帧操作（人机模式的 player 与双人模式的两位玩家共用这段）
+  // 移动是「坦克式」的：左右 = 原地转车头，前后 = 沿车头方向前进 / 倒车；
+  // 炮口永远跟车头同向，所以想打哪里就把车头转过去。
+  function updateHumanTank(t, k, dt) {
+    if (!t || !t.alive) { return; }
+    if (t.spawnAnim > 0) { t.spawnAnim = Math.max(0, t.spawnAnim - dt / 1000); }
+    if (t.hurtFlash > 0) { t.hurtFlash = Math.max(0, t.hurtFlash - dt / 1000); }
+    if (t.shieldFlash > 0) { t.shieldFlash = Math.max(0, t.shieldFlash - dt / 1000); }
+    t.fireTimer = Math.max(0, t.fireTimer - dt);
+    t.exposeT = Math.max(0, t.exposeT - dt);
+
+    var turn = 0;
+    if (k.left) { turn -= 1; }
+    if (k.right) { turn += 1; }
+
+    var drive = 0;                             // +1 前进，-1 后退
+    if (k.up) { drive += 1; }
+    if (k.down) { drive -= 1; }
+
+    if (turn) {
+      // turnRate 单位是「弧度/秒」，换算成毫秒
+      t.moveAngle = (t.moveAngle || 0) + turn * (t.turnRate || TURN_SPEED * 1000) / 1000 * dt;
+      t.trackSpin = turn;                      // 供绘制履带纹路用
+    } else {
+      t.trackSpin = 0;
+    }
+
+    if (drive) {
+      var head = t.moveAngle || 0;
+      var dirX = Math.cos(head) * drive;
+      var dirY = Math.sin(head) * drive;
+      t.mx = dirX; t.my = dirY;
+      t.backing = (drive < 0);
+      var spd = t.speed * dt * (drive < 0 ? REVERSE_MUL : 1);
+      tryMove(t, dirX * spd, dirY * spd);
+      clampToField(t);
+    } else {
+      t.mx = 0; t.my = 0;
+      t.backing = false;
+    }
+
+    // 瞄准：炮筒方向与车头保持一致
+    t.angle = t.moveAngle || 0;
+
+    if (k.fire) { fire(t); }
+  }
 
   function update(dt) {
     // ---- 关卡简报倒计时（帧驱动，切页/暂停都不会乱序）----
@@ -3437,51 +3854,10 @@
     if (shakeT > 0) { shakeT = Math.max(0, shakeT - dt / 1000); }
 
     // ---- 玩家控制 ----
-    if (player && player.alive) {
-      if (player.spawnAnim > 0) { player.spawnAnim = Math.max(0, player.spawnAnim - dt / 1000); }
-      if (player.hurtFlash > 0) { player.hurtFlash = Math.max(0, player.hurtFlash - dt / 1000); }
-      if (player.shieldFlash > 0) { player.shieldFlash = Math.max(0, player.shieldFlash - dt / 1000); }
-      player.fireTimer = Math.max(0, player.fireTimer - dt);
-      player.exposeT = Math.max(0, player.exposeT - dt);
-
-
-      // ---- 移动：坦克式相对操控 ----
-      // 左右键 = 车体原地转向（旋转车头），前后键 = 沿车头方向前进 / 倒车
-      var turn = 0;
-      if (keys.left) { turn -= 1; }
-      if (keys.right) { turn += 1; }
-
-      var drive = 0;                             // +1 前进，-1 后退
-      if (keys.up) { drive += 1; }
-      if (keys.down) { drive -= 1; }
-
-      if (turn) {
-        // turnRate 单位是「弧度/秒」，换算成毫秒
-        player.moveAngle = (player.moveAngle || 0) + turn * (player.turnRate || TURN_SPEED * 1000) / 1000 * dt;
-        player.trackSpin = turn;                 // 供绘制履带纹路用
-      } else {
-        player.trackSpin = 0;
-      }
-
-      if (drive) {
-        var head = player.moveAngle || 0;
-        var dirX = Math.cos(head) * drive;
-        var dirY = Math.sin(head) * drive;
-        player.mx = dirX; player.my = dirY;
-        player.backing = (drive < 0);
-        var spd = player.speed * dt * (drive < 0 ? REVERSE_MUL : 1);
-        tryMove(player, dirX * spd, dirY * spd);
-        clampToField(player);
-      } else {
-        player.mx = 0; player.my = 0;
-        player.backing = false;
-      }
-
-      // ---- 瞄准：炮筒方向与车头保持一致 ----
-      player.angle = player.moveAngle || 0;
-
-      if (keys.fire) { fire(player); }
-    }
+    // 人机模式：player 吃 keys（WASD 或方向键都行）
+    // 双人模式：player 吃 keys（只认 WASD + 空格），player2 吃 keys2（方向键 + 回车）
+    updateHumanTank(player, keys, dt);
+    if (mode === 'duel') { updateHumanTank(player2, keys2, dt); }
 
     // ---- AI（1~3 台）----
     for (var ai = 0; ai < foes.length; ai++) {
@@ -3498,22 +3874,21 @@
     updateBullets(dt);
 
     // 履带动画相位：车体转动或行进时履带纹路滑动
-    var treadFeed = [player];
-    for (var tf = 0; tf < foes.length; tf++) { treadFeed.push(foes[tf]); }
+    var treadFeed = allTanks();
     for (var ti = 0; ti < treadFeed.length; ti++) {
       var tt = treadFeed[ti];
       if (!tt || !tt.alive) { continue; }
       var moving = (tt.mx || tt.my) ? 1 : 0;
-      var spinning = (tt === player && tt.trackSpin) ? tt.trackSpin : 0;
+      var spinning = tt.trackSpin || 0;
       var rate = moving * 1.0 + Math.abs(spinning) * 0.9;
       if (rate) { tt.treadPhase = (tt.treadPhase || 0) + rate * dt * 0.0042; }
     }
 
     resolveTankCollision();
     // 防卡死：碰撞推挤后可能把坦克挤进墙里，兜底拉出来
-    if (player && player.alive) { unstickTank(player); clampToField(player); }
-    for (var uf = 0; uf < foes.length; uf++) {
-      if (foes[uf].alive) { unstickTank(foes[uf]); clampToField(foes[uf]); }
+    var stuckFeed = allTanks();
+    for (var uf = 0; uf < stuckFeed.length; uf++) {
+      if (stuckFeed[uf].alive) { unstickTank(stuckFeed[uf]); clampToField(stuckFeed[uf]); }
     }
     updateCoins(dt);
     updateEffects(dt);
@@ -3565,6 +3940,10 @@
     ensureAudio();
     ensureBgm();       // 用户点击「开始闯关」= 首次交互，此时浏览器才允许播放音乐
     tryPlayBgm();
+    // 从双人模式切回闯关：先把双人那套状态清掉
+    mode = 'campaign';
+    duel = null;
+    player2 = null;
     var useSave = !!(resume && runSave);
     var i, j;
 
@@ -3668,6 +4047,7 @@
     genStage();
     initPlayer();
     initFoes(levelNo);
+    player2 = null;                  // 闯关模式没有 2 号玩家
     endSpawnGrace();
     bullets = [];
     effects = [];
@@ -3787,6 +4167,315 @@
     }
     levelEarned = 0;
     phoenixUsed = false;
+  }
+
+  // ==================== 双人对战：流程 ====================
+  // duelPhase：
+  //   'buy'  → 双方用各自的 1000 金币买技能（建立技能池）
+  //   'prep' → 每局开打前，各自免费把「技能池里的一个技能」+1 级
+  var duelPhase = 'buy';
+  var duelRoundChoice = DUEL_DEFAULT_ROUNDS;   // 首页选的总局数
+
+  // 双人商店出售哪些技能：有价格（price > 0）的才卖。
+  // 磁力吸金（greed）在双人里没有金币可吸，price 为 0 → 不出现。
+  function duelSkillList() {
+    var out = [];
+    for (var i = 0; i < SKILLS.length; i++) {
+      if (SKILLS[i].price > 0) { out.push(SKILLS[i]); }
+    }
+    return out;
+  }
+
+  // 手机 / 小平板：双人同屏要两块键盘区，操作不了。
+  // 用户要求「手机端不方便的话可以只允许人机对战」→ 这类设备直接禁用双人入口。
+  function isTouchOnlyDevice() {
+    return ('ontouchstart' in window) && Math.min(window.innerWidth, window.innerHeight) < 820;
+  }
+
+  function showModePick() {
+    if (modePick) { modePick.classList.remove('hidden'); }
+    if (campaignPanel) { campaignPanel.classList.add('hidden'); }
+    hide(ovDuel);
+    if (btnModeDuel) {
+      var blocked = isTouchOnlyDevice();
+      btnModeDuel.disabled = blocked;
+      btnModeDuel.classList.toggle('locked', blocked);
+      var desc = btnModeDuel.querySelector('.mode-desc');
+      if (desc) {
+        desc.innerHTML = blocked
+          ? '手机上双人同屏没法操作<br>请玩人机闯关'
+          : '同屏两人对轰，开局各买技能<br>需要键盘 · 手机端暂不支持';
+      }
+    }
+  }
+  function showCampaignPanel() {
+    if (modePick) { modePick.classList.add('hidden'); }
+    if (campaignPanel) { campaignPanel.classList.remove('hidden'); }
+  }
+
+  // 从首页进入双人模式：建对局 → 显示购买面板
+  function enterDuelMode() {
+    ensureAudio();
+    ensureBgm();
+    tryPlayBgm();
+    mode = 'duel';
+    duel = newDuel(duelRoundChoice);
+    duelPhase = 'buy';
+    state = 'duelMenu';
+    player = null;
+    player2 = null;
+    foes = [];
+    bullets = [];
+    hide(ovStart); hide(ovOver); hide(ovRound); hide(ovPause); hide(ovLevel); hide(ovDuel);
+    hide(shopPanel);
+    show(duelPanel);
+    renderDuelPanel();
+    updateHUD();
+  }
+
+  // 退出双人回到首页（清干净，避免残留的坦克出现在闯关模式里）
+  function exitDuelMode() {
+    hide(duelPanel); hide(ovDuel); hide(ovPause);
+    mode = 'campaign';
+    duel = null;
+    player = null;
+    player2 = null;
+    foes = [];
+    bullets = [];
+    state = 'start';
+    show(ovStart);
+    showModePick();
+    updateHUD();
+  }
+
+  // 买一级技能（购买阶段）
+  function buyDuelSkill(pi, id) {
+    if (!duel || duelPhase !== 'buy') { return false; }
+    var P = duel.p[pi - 1];
+    if (P.ready) { return false; }
+    var s = null;
+    for (var i = 0; i < SKILLS.length; i++) { if (SKILLS[i].id === id) { s = SKILLS[i]; } }
+    if (!s || s.price <= 0) { return false; }
+    var cur = P.skills[id] || 0;
+    if (cur >= s.maxLv) { return false; }
+    if (P.coins < s.price) { return false; }
+    P.coins -= s.price;
+    P.skills[id] = cur + 1;
+    P.bought[id] = true;
+    renderDuelPanel();
+    return true;
+  }
+
+  // 选中本局要免费 +1 的技能（准备阶段，确认后才真正生效）
+  function pickDuelUpgrade(pi, id) {
+    if (!duel || duelPhase !== 'prep') { return false; }
+    var P = duel.p[pi - 1];
+    if (P.ready) { return false; }
+    if (!P.bought[id]) { return false; }
+    var s = null;
+    for (var i = 0; i < SKILLS.length; i++) { if (SKILLS[i].id === id) { s = SKILLS[i]; } }
+    if (!s) { return false; }
+    if ((P.skills[id] || 0) >= s.maxLv) { return false; }
+    P.pick = (P.pick === id) ? null : id;   // 再点一次取消选择
+    renderDuelPanel();
+    return true;
+  }
+
+  // 某位玩家点「我买好了 / 确认技能」
+  function duelReady(pi) {
+    if (!duel) { return; }
+    var P = duel.p[pi - 1];
+    if (P.ready) { return; }
+
+    if (duelPhase === 'prep' && P.pick) {
+      // 免费 +1 级（每局只允许一个技能）
+      var id = P.pick;
+      var s = null;
+      for (var i = 0; i < SKILLS.length; i++) { if (SKILLS[i].id === id) { s = SKILLS[i]; } }
+      if (s && (P.skills[id] || 0) < s.maxLv) {
+        P.skills[id] = (P.skills[id] || 0) + 1;
+      }
+    }
+    P.ready = true;
+
+    // 两个人都准备好了才往下走
+    if (duel.p[0].ready && duel.p[1].ready) {
+      if (duelPhase === 'buy') {
+        duelPhase = 'prep';
+        duel.p[0].ready = false; duel.p[1].ready = false;
+        duel.p[0].pick = null; duel.p[1].pick = null;
+        renderDuelPanel();
+        return;
+      }
+      // 准备完毕 → 开打
+      duel.p[0].ready = false; duel.p[1].ready = false;
+      hide(duelPanel);
+      startDuelRound();
+      return;
+    }
+    renderDuelPanel();
+  }
+
+  function renderDuelPanel() {
+    if (!duel) { return; }
+    // 局数只在购买阶段能改，其他阶段直接收起，免得点了没反应让人困惑
+    var rp = document.getElementById('duelRoundPick');
+    if (rp) { rp.style.display = (duelPhase === 'buy') ? '' : 'none'; }
+    duelRoundLabel.textContent = '第 ' + duel.round + ' / ' + duel.totalRounds + ' 局 · ' + duel.needWins + ' 胜制';
+    duelScoreLabel.textContent = duel.score[0] + ' : ' + duel.score[1];
+    duelCoins1.textContent = duel.p[0].coins;
+    duelCoins2.textContent = duel.p[1].coins;
+    duelPhaseLabel.textContent = duelPhase === 'buy'
+      ? '第 1 步 · 购买技能'
+      : '第 ' + duel.round + ' 局 · 免费升级';
+    duelTitle.textContent = duelPhase === 'buy' ? '⚔ 双人对战 · 购买技能' : '⚔ 第 ' + duel.round + ' 局 · 选一个技能 +1';
+
+    renderDuelColumn(1);
+    renderDuelColumn(2);
+
+    var t1 = duel.p[0].ready, t2 = duel.p[1].ready;
+    duelOk1.textContent = t1 ? '✓ 已确认' : (duelPhase === 'buy' ? '我买好了' : '确认技能');
+    duelOk2.textContent = t2 ? '✓ 已确认' : (duelPhase === 'buy' ? '我买好了' : '确认技能');
+    duelOk1.classList.toggle('done', t1);
+    duelOk2.classList.toggle('done', t2);
+
+    if (duelPhase === 'buy') {
+      duelSub.innerHTML = '双方各 <b>' + DUEL_BUDGET + '</b> 金币（额度完全相同）。技能越强越贵，同一个技能也可以反复购买来升级。<br>' +
+        '两个人都点「我买好了」后，进入每一局开打前的免费升级。';
+      duelTip.textContent = '💡 买下的技能会进入你的技能池；之后每局开打前，只能从池子里挑一个 +1 级（免费）。';
+    } else {
+      var p1n = duel.p[0].pick ? ('已选：' + skillName(duel.p[0].pick)) : '还没选（不选就等于跳过）';
+      var p2n = duel.p[1].pick ? ('已选：' + skillName(duel.p[1].pick)) : '还没选（不选就等于跳过）';
+      duelSub.innerHTML = '本局免费提升：点击自己那列里 <b>已买过</b> 的技能卡即可选中（再点一次取消）。<br>' +
+        'P1 ' + p1n + '　·　P2 ' + p2n;
+      duelTip.textContent = '💡 每局只能提升一个技能。买得少 → 升得集中；买得多 → 每局都有得选但升得慢。';
+    }
+  }
+
+  function skillName(id) {
+    for (var i = 0; i < SKILLS.length; i++) { if (SKILLS[i].id === id) { return SKILLS[i].name; } }
+    return id;
+  }
+
+  function renderDuelColumn(pi) {
+    var box = (pi === 1) ? duelCards1 : duelCards2;
+    if (!box) { return; }
+    box.innerHTML = '';
+    var P = duel.p[pi - 1];
+    var list = duelSkillList();
+
+    for (var i = 0; i < list.length; i++) {
+      var s = list[i];
+      var cur = P.skills[s.id] || 0;
+      // 升级阶段只显示「买过」的技能
+      if (duelPhase === 'prep' && cur <= 0) { continue; }
+      var full = cur >= s.maxLv;
+      var locked = P.ready || full || (duelPhase === 'buy' && P.coins < s.price);
+
+      var card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'duel-card' +
+        (cur > 0 ? ' owned' : '') +
+        (locked ? ' locked' : '') +
+        (duelPhase === 'prep' && P.pick === s.id ? ' picked' : '');
+
+      var ico = document.createElement('span');
+      ico.className = 'dc-ico';
+      ico.textContent = s.icon;
+      card.appendChild(ico);
+
+      var main = document.createElement('span');
+      main.className = 'dc-main';
+      var nm = document.createElement('span');
+      nm.className = 'dc-name';
+      nm.textContent = s.name + ' ';
+      var lvEl = document.createElement('span');
+      lvEl.className = 'dc-lv';
+      lvEl.textContent = 'Lv.' + cur + '/' + s.maxLv;
+      nm.appendChild(lvEl);
+      main.appendChild(nm);
+      var ds = document.createElement('span');
+      ds.className = 'dc-desc';
+      ds.textContent = s.desc;
+      main.appendChild(ds);
+      card.appendChild(main);
+
+      var price = document.createElement('span');
+      price.className = 'dc-price';
+      price.textContent = full ? '满级' : (duelPhase === 'buy' ? ('💰' + s.price) : '+1');
+      card.appendChild(price);
+
+      (function (who, sid) {
+        card.addEventListener('click', function () {
+          if (duelPhase === 'buy') { buyDuelSkill(who, sid); }
+          else { pickDuelUpgrade(who, sid); }
+        });
+      })(pi, s.id);
+
+      box.appendChild(card);
+    }
+  }
+
+  // 单局结束：先死的一方输。判分 → 未分胜负就回准备界面。
+  function endDuelRound(winnerIdx) {
+    if (state !== 'playing') { return; }
+    state = 'roundover';
+    syncBgmToState();
+    shakeT = 0; shakeMag = 0;
+    bullets = [];
+    duel.score[winnerIdx - 1]++;
+    if (winnerIdx === 1) { sfx.win(); } else { sfx.lose(); }
+
+    var a = duel.score[0], b = duel.score[1];
+    var need = duel.needWins;
+    var finished = (a >= need || b >= need);
+
+    duelEndScore.textContent = a + ' : ' + b;
+    if (finished) {
+      duel.finished = true;
+      duelEndTitle.textContent = (a > b) ? '🏆 P1 获胜！' : '🏆 P2 获胜！';
+      duelEndSub.innerHTML = '总比分 <b>' + a + ' : ' + b + '</b>（' + duel.totalRounds + ' 局 · ' + need + ' 胜制）<br>' +
+        (a > b ? '青色坦克笑到最后。' : '橙色坦克笑到最后。');
+      btnDuelNext.textContent = '再来一局';
+      btnDuelNext._action = 'rematch';
+    } else {
+      duelEndTitle.textContent = (winnerIdx === 1) ? 'P1 拿下本局' : 'P2 拿下本局';
+      duelEndSub.innerHTML = '第 <b>' + duel.round + '</b> 局结束　·　先到 <b>' + need + '</b> 胜者赢下这场对局<br>' +
+        '下一局开打前，双方各能免费提升一个已买技能。';
+      btnDuelNext.textContent = '第 ' + (duel.round + 1) + ' 局 · 选技能';
+      btnDuelNext._action = 'next';
+    }
+    show(ovDuel);
+    hide(duelPanel);
+    updateHUD();
+  }
+
+  function duelNextClick() {
+    if (!duel) { return; }
+    var act = btnDuelNext._action || 'next';
+    hide(ovDuel);
+
+    if (act === 'rematch') {
+      var total = duel.totalRounds;
+      duel = newDuel(total);
+      duelPhase = 'buy';
+      player = null; player2 = null; foes = []; bullets = [];
+      state = 'duelMenu';
+      show(duelPanel);
+      renderDuelPanel();
+      updateHUD();
+      return;
+    }
+
+    duel.round++;
+    duelPhase = 'prep';
+    duel.p[0].ready = false; duel.p[1].ready = false;
+    duel.p[0].pick = null; duel.p[1].pick = null;
+    player = null; player2 = null; foes = []; bullets = [];
+    state = 'duelMenu';
+    show(duelPanel);
+    renderDuelPanel();
+    updateHUD();
   }
 
   // ==================== 整备车间（技能三选一 + 装备升级）====================
@@ -3923,10 +4612,17 @@
   // 清干净战场，回到开始界面（历史纪录等存档保留）
   function goHome() {
     if (shopPanel && !shopPanel.classList.contains('hidden')) { hide(shopPanel); }
+    hide(duelPanel); hide(ovDuel);
+
+    // 从双人局回主页：模式复位，否则 HUD / 输入会停在双人那套设定上
+    mode = 'campaign';
+    duel = null;
+    duelPhase = 'buy';
 
     state = 'start';
     syncBgmToState();           // 回主页：音乐会暂停（见 syncBgmToState 内对 start 的处理）
     player = null;
+    player2 = null;
     foes = [];
     bullets = [];
     effects = [];
@@ -3946,9 +4642,12 @@
 
     keys.left = false; keys.right = false; keys.up = false;
     keys.down = false; keys.fire = false;
+    keys2.left = false; keys2.right = false; keys2.up = false;
+    keys2.down = false; keys2.fire = false;
 
     hide(ovPause); hide(ovRound); hide(ovLevel); hide(ovOver);
     show(ovStart);
+    showModePick();             // 回到第一步：选玩法
 
     syncRoundPickUI();
     syncDiffPickUI();
@@ -4030,7 +4729,8 @@
   function syncHiddenBadge() {
     if (!hiddenBadge) { return; }
     var want = '';
-    if (state === 'playing' && player && player.alive && inGrass(player)) {
+    // 双人模式草地不提供隐蔽（同屏两人都看得见），所以这个徽章不出现
+    if (mode === 'campaign' && state === 'playing' && player && player.alive && inGrass(player)) {
       want = 'hidden';
       // 刚开过火：枪口火光把位置暴露了，优先级高于"已隐蔽"
       if (isExposed(player)) { want = 'exposed'; }
@@ -4052,6 +4752,35 @@
   }
 
   function updateHUD() {
+    // ---- 双人对战：HUD 换成双方视角 ----
+    if (mode === 'duel') {
+      if (uiLevelLabel) { uiLevelLabel.textContent = '局数'; }
+      if (uiLevel) { uiLevel.textContent = duel ? (duel.round + ' / ' + duel.totalRounds) : '—'; }
+      if (uiRoundLabel) { uiRoundLabel.textContent = '总比分'; }
+      uiRound.textContent = duel ? (duel.score[0] + ' : ' + duel.score[1]) : '0 : 0';
+      if (uiLifeLabel) { uiLifeLabel.textContent = 'P1 血量'; }
+      uiLife.textContent = (player && player.alive) ? player.hp : 0;
+      if (uiLifeShield) {
+        var sh1 = !!(player && player.shieldMax > 0);
+        uiLifeShield.style.display = sh1 ? '' : 'none';
+        uiLifeShield.textContent = sh1 ? ('盾 ' + (player.alive ? player.shield : 0)) : '';
+      }
+      if (uiFoeLabel) { uiFoeLabel.textContent = 'P2 血量'; }
+      if (uiFoeLv) { uiFoeLv.textContent = (player2 && player2.shieldMax > 0) ? ('盾 ' + (player2.alive ? player2.shield : 0)) : ''; }
+      uiFoeHp.textContent = (player2 && player2.alive) ? player2.hp : 0;
+      if (chipCoins) { chipCoins.style.display = 'none'; }
+      if (btnShop) { btnShop.style.display = 'none'; }
+      if (pad) { pad.style.display = 'none'; }     // 双人靠键盘，手机方向键会挡住战场
+      return;
+    }
+    if (chipCoins) { chipCoins.style.display = ''; }
+    if (btnShop) { btnShop.style.display = ''; }
+    if (pad) { pad.style.display = ''; }
+    if (uiLevelLabel) { uiLevelLabel.textContent = '关卡'; }
+    if (uiRoundLabel) { uiRoundLabel.textContent = '本关比分'; }
+    if (uiLifeLabel) { uiLifeLabel.textContent = '我的血量'; }
+    if (uiFoeLabel) { uiFoeLabel.textContent = '敌方'; }
+
     if (uiLevel) { uiLevel.textContent = levelNo + ' / ' + TOTAL_LEVELS; }
     uiRound.textContent = winsMe + ' : ' + winsFoe;
 
@@ -4234,11 +4963,15 @@
   }
 
   // ==================== 输入 ====================
+  // 人机模式：WASD 与方向键都归同一个玩家（沿用原来的手感）
   var keyMap = {
     'ArrowUp': 'up', 'ArrowDown': 'down', 'ArrowLeft': 'left', 'ArrowRight': 'right',
     'KeyW': 'up', 'KeyS': 'down', 'KeyA': 'left', 'KeyD': 'right',
     'Space': 'fire'
   };
+  // 双人模式：两套键位互不重叠，才能两个人同时操作同一台电脑
+  var DUEL_P1_KEYS = { 'KeyW': 'up', 'KeyS': 'down', 'KeyA': 'left', 'KeyD': 'right', 'Space': 'fire' };
+  var DUEL_P2_KEYS = { 'ArrowUp': 'up', 'ArrowDown': 'down', 'ArrowLeft': 'left', 'ArrowRight': 'right', 'Enter': 'fire' };
 
   window.addEventListener('keydown', function (e) {
     // 简报界面：空格/回车直接开打
@@ -4252,7 +4985,16 @@
       e.preventDefault();
       return;
     }
-    if (keyMap[e.code]) {
+    // 双人：P1 = WASD + 空格，P2 = 方向键 + 回车（两套键位彻底分开，不会抢键）
+    if (mode === 'duel') {
+      if (DUEL_P2_KEYS[e.code]) {
+        keys2[DUEL_P2_KEYS[e.code]] = true;
+        e.preventDefault();
+      } else if (DUEL_P1_KEYS[e.code]) {
+        keys[DUEL_P1_KEYS[e.code]] = true;
+        e.preventDefault();
+      }
+    } else if (keyMap[e.code]) {
       keys[keyMap[e.code]] = true;
       e.preventDefault();
     }
@@ -4265,6 +5007,11 @@
   });
 
   window.addEventListener('keyup', function (e) {
+    if (mode === 'duel') {
+      if (DUEL_P2_KEYS[e.code]) { keys2[DUEL_P2_KEYS[e.code]] = false; e.preventDefault(); }
+      if (DUEL_P1_KEYS[e.code]) { keys[DUEL_P1_KEYS[e.code]] = false; e.preventDefault(); }
+      return;
+    }
     if (keyMap[e.code]) {
       keys[keyMap[e.code]] = false;
       e.preventDefault();
@@ -4305,6 +5052,42 @@
   // ==================== 按钮绑定 ====================
   btnStart.addEventListener('click', function () { startRun(!!runSave); });
   if (btnRestart) { btnRestart.addEventListener('click', onRestartClick); }
+
+  // ==================== 模式选择 / 双人按钮 ====================
+  if (btnModeCampaign) { btnModeCampaign.addEventListener('click', showCampaignPanel); }
+  if (btnModeDuel) {
+    btnModeDuel.addEventListener('click', function () {
+      if (btnModeDuel.disabled) { return; }
+      enterDuelMode();
+    });
+  }
+  if (btnBackMode) { btnBackMode.addEventListener('click', showModePick); }
+  if (duelOk1) { duelOk1.addEventListener('click', function () { duelReady(1); }); }
+  if (duelOk2) { duelOk2.addEventListener('click', function () { duelReady(2); }); }
+  if (btnDuelNext) { btnDuelNext.addEventListener('click', duelNextClick); }
+  if (btnDuelHome) { btnDuelHome.addEventListener('click', exitDuelMode); }
+  if (btnDuelBack) {
+    btnDuelBack.addEventListener('click', function () {
+      if (state === 'playing') { return; }    // 打到一半不给退，免得误触
+      exitDuelMode();
+    });
+  }
+  // 总局数：只在购买阶段可改（改了会重开购买，避免"买完了才改局数"导致配置不一致）
+  var duelRoundPick = document.getElementById('duelRoundPick');
+  if (duelRoundPick) {
+    duelRoundPick.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b || !duel || duelPhase !== 'buy') { return; }
+      var n = parseInt(b.getAttribute('data-drounds'), 10);
+      if (!n || n === duel.totalRounds) { return; }
+      var btns = duelRoundPick.querySelectorAll('button');
+      for (var i = 0; i < btns.length; i++) { btns[i].classList.toggle('on', btns[i] === b); }
+      duelRoundChoice = n;
+      duel = newDuel(n);
+      duelPhase = 'buy';
+      renderDuelPanel();
+    });
+  }
   btnResume.addEventListener('click', function () { togglePause(); });
   btnNextRound.addEventListener('click', function () { nextRound(); });
   btnAgain.addEventListener('click', function () { hide(ovOver); startRun(false); });
@@ -4423,6 +5206,7 @@
   syncDiffPickUI();
   syncBgmVolUI();
   refreshStartInfo();
+  showModePick();            // 首屏：先让人选「人机闯关 / 双人对战」
 
   genStage();                // 主页背景先铺一张地图
   updateHUD();
@@ -4434,6 +5218,7 @@
       getState: function () {
         return {
           state: state, levelNo: levelNo, roundInLevel: roundInLevel,
+          mode: mode, duel: duel, player2: player2, duelPhase: duelPhase,
           winsMe: winsMe, winsFoe: winsFoe, levelRounds: levelRounds, winNeed: winNeed,
           coins: coins, runCoins: runCoins, bullets: bullets.length, grid: grid,
           player: player, foes: foes, foe: foes[0] || null,
@@ -4448,7 +5233,28 @@
         };
       },
       fire: function () { if (player) { fire(player); } },
+      // 指定玩家开火（双人测试用；1 = P1，2 = P2）
+      fireTank: function (pi) { var t = (pi === 2) ? player2 : player; if (t) { fire(t); } },
       setKey: function (k, v) { keys[k] = v; },
+      // 双人：P2 的输入（与真实键盘走同一套 keys2）
+      setKey2: function (k, v) { keys2[k] = v; },
+      // ---- 双人对战接口（测试与自动化都走这里，和 UI 是同一条代码路径）----
+      mode: function () { return mode; },
+      enterDuel: function (rounds) {
+        if (typeof rounds === 'number') { duelRoundChoice = rounds; }
+        enterDuelMode();
+        return duel ? JSON.parse(JSON.stringify(duel)) : null;
+      },
+      exitDuel: function () { exitDuelMode(); },
+      getDuel: function () { return duel ? JSON.parse(JSON.stringify(duel)) : null; },
+      getDuelPhase: function () { return duelPhase; },
+      duelBuy: function (pi, id) { return buyDuelSkill(pi, id); },
+      duelPick: function (pi, id) { return pickDuelUpgrade(pi, id); },
+      duelReady: function (pi) { duelReady(pi); return duel ? JSON.parse(JSON.stringify(duel)) : null; },
+      startDuelRound: function () { if (duel) { startDuelRound(); } },
+      duelNext: function () { duelNextClick(); },
+      duelSkillList: function () { return duelSkillList().map(function (s) { return s.id; }); },
+      getPlayer2: function () { return player2; },
       tick: function (dt) { update(dt); },
       // 仅供测试：强制渲染一帧 + 暴露格子像素尺寸，便于采样画布做渲染层验证
       renderOnce: function () { draw(); return true; },
