@@ -1047,6 +1047,9 @@
   //   真正的误差主要放在每发子弹出膛的瞬间独立抽取，所以命不命中互不相关。
   var AIM_WOBBLE = 0.25;             // 炮口跟随目标的残余摆动（× 关卡 jitter）
   var AIM_SCATTER = 0.62;            // 每发子弹的独立散布（× 关卡 jitter）
+  var HULL_TURN_RATE = 7.0;          // 敌人车体的最大转向速度（rad/s，约 400°/s）
+                                     // 只是观感：以前 moveAngle 直接赋值，方向一变车体
+                                     // 就瞬间弹到新角度；贴墙反复换向时会闪成"抽搐"。
   // ⚠️ 2026-10-17 由 1.05 收紧到 0.62：玩家反馈"敌人打得太飘"。
   //    5 格距离命中率 41% → 65%，9 格 23% → 37%；难度靠"仍然会漏"来保留，
   //    不要低于 0.45（那时候中距离接近必中，玩家会觉得没地方可躲）。
@@ -2541,6 +2544,7 @@
     }
 
     var moveVec = { x: 0, y: 0 };
+    var probeLen = t.r + 0.30;
 
     if (danger) {
       // 垂直于子弹来向闪避
@@ -2571,30 +2575,27 @@
       }
       moveVec = t.aiGoal || { x: 0, y: 0 };
 
-      // 前方被挡 → 沿墙滑动或换向
-      // ⚠️ 2026-10-17 修正"开局原地打转"：
-      //    旧代码在正前方被挡时，只试左转 90° / 右转 90°。如果坦克正顶着一堵
-      //    又长又直的墙（开局从角落往场内开很常见），两个 90° 方向同样是墙，
-      //    于是它整帧不动；下一帧重新抽随机目标又顶墙 —— 表现为贴着墙原地
-      //    左右摆头/打转，玩家看到的就是"对面坦克在原地发疯"。
-      //    现在逐个尝试 6 个方向（±45° / 82° / ±120° 与反抽旧目标，不再只试 90°）。
-      var probe = t.r + 0.28;
-      if (circleBlocked(t.gx + moveVec.x * probe, t.gy + moveVec.y * probe, t.r)) {
-        t.aiTimer = 0;
-        t.aiGoal = null;
-        var baseA = Math.atan2(moveVec.y, moveVec.x);
-        var tried = [0.6, -0.6, 1.45, -1.45, 2.1, -2.1, 3.0, -3.0];
-        var found = null;
-        for (var ti = 0; ti < tried.length; ti++) {
-          var na = baseA + tried[ti];
-          var nx = Math.cos(na), ny = Math.sin(na);
-          if (!circleBlocked(t.gx + nx * probe, t.gy + ny * probe, t.r)) {
-            found = { x: nx, y: ny };
-            break;
+      // 前方被挡 → 换一个能走的方向，并且**锁定一小段时间**
+      // ⚠️ 2026-10-17 修正「原地不动 + 车体左右迅速摇摆」：
+      //    旧代码在这里把 aiTimer 清零、aiGoal 置空，于是**下一帧又重抽一次目标**；
+      //    而重抽出来的方向带随机扰动，仍然朝着玩家（也就是仍然顶着墙），
+      //    于是每帧都要重新找一次替代方向 —— 替代方向在墙的左右两侧来回跳，
+      //    车体跟着一秒内左右甩几十次，位置却几乎不动。
+      //    现在：找到的方向直接写回 aiGoal 并给它 0.5~1 秒的存活时间，
+      //    这段时间内它只会顺着这个方向走，不会跟自己对冲。
+      if (moveVec.x || moveVec.y) {
+        if (circleBlocked(t.gx + moveVec.x * probeLen, t.gy + moveVec.y * probeLen, t.r)) {
+          var esc = pickEscapeDir(t, moveVec, probeLen);
+          if (esc) {
+            moveVec = esc;
+            t.aiGoal = esc;
+            t.aiTimer = rnd(500, 1000);
+          } else {
+            moveVec = { x: -moveVec.x, y: -moveVec.y };  // 四面皆墙：干脆反着开
+            t.aiGoal = null;
+            t.aiTimer = 0;
           }
         }
-        if (found) { moveVec = found; }
-        else { moveVec = { x: -moveVec.x, y: -moveVec.y }; }   // 四面皆墙：干脆反着开
       }
     }
 
@@ -2602,16 +2603,55 @@
     if (moveVec.x || moveVec.y) {
       var mv = norm(moveVec.x, moveVec.y);
       var spd = t.speed * (t.aiPanic > 0 ? 1.25 : 1) * dt;
-      var res = tryMove(t, mv.x * spd, mv.y * spd);
-      if (!res.moved) {
-        t.aiTimer = 0;
-        t.aiGoal = null;
-      } else {
-        t.moveAngle = Math.atan2(mv.y, mv.x);
+      var bx = t.gx, by = t.gy;
+      tryMove(t, mv.x * spd, mv.y * spd);
+      var moved = Math.sqrt((t.gx - bx) * (t.gx - bx) + (t.gy - by) * (t.gy - by));
+
+      // 车体朝向平滑跟随（见 HULL_TURN_RATE 的说明）
+      steerHull(t, Math.atan2(mv.y, mv.x), dt);
+
+      // 卡死判定：想走却几乎没挪动（贴墙 / 被另一台坦克顶住）。
+      // 连续两帧都不动就换方向并锁定 —— 否则下一帧又抽回原方向，
+      // 车体就会在原地左右甩（玩家看到的就是"原地抽搐"）。
+      if (moved < spd * 0.35) { t.stuckMs = (t.stuckMs || 0) + dt; }
+      else { t.stuckMs = 0; }
+
+      if (t.stuckMs >= 32) {
+        t.stuckMs = 0;
+        var esc2 = pickEscapeDir(t, mv, probeLen);
+        // 找不到空位就贴着墙侧向走一步，别再往墙里怼
+        t.aiGoal = esc2 || { x: -mv.y, y: mv.x };
+        t.aiTimer = rnd(550, 1100);
       }
+    } else {
+      t.stuckMs = 0;
     }
 
     clampToField(t);
+  }
+
+  // 车体朝向按最大角速度转向目标（只影响观感，不影响移动/射击）
+  function steerHull(t, targetAngle, dt) {
+    var cur = t.moveAngle || 0;
+    var maxStep = HULL_TURN_RATE * dt / 1000;
+    t.moveAngle = cur + clamp(angleDiff(targetAngle, cur), -maxStep, maxStep);
+  }
+
+  // 从「被挡住的方向」出发，找一个真正走得通的方向。
+  // 从小角度偏转开始试（尽量贴着墙滑），最后才考虑反向；
+  // 返回单位向量，全被堵住则返回 null。
+  function pickEscapeDir(t, dir, probe) {
+    if (!dir || (!dir.x && !dir.y)) { return null; }
+    var baseA = Math.atan2(dir.y, dir.x);
+    var tried = [0.5, -0.5, 0.95, -0.95, 1.5, -1.5, 2.2, -2.2, 2.9, -2.9];
+    for (var i = 0; i < tried.length; i++) {
+      var a = baseA + tried[i];
+      var nx = Math.cos(a), ny = Math.sin(a);
+      if (!circleBlocked(t.gx + nx * probe, t.gy + ny * probe, t.r)) {
+        return { x: nx, y: ny };
+      }
+    }
+    return null;
   }
 
   // 两角之间的最小夹角差
