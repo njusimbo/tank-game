@@ -1056,10 +1056,17 @@
   var BASE_HP = 3;                   // 玩家基础血量（可被升级 / 技能提升）
 
   // ---------- 整体难度（在 15 关曲线上再乘一个系数）----------
+  // mul     : 体量系数（速度 / 开火频率 / 弹速 / 耐久）
+  // aimMul  : 瞄准散布系数，>1 = 更飘更难打中你
+  // reactMul: 感知刷新间隔系数，>1 = 反应更慢
+  // 三者相乘才是完整难度 —— 只动 mul 会出现"敌人更多更快但一样准"的违和感。
   var DIFFS = [
-    { id: 'easy',   name: '轻松', mul: 0.86, desc: '敌人整体强度 ×0.86 · 先摸清玩法' },
-    { id: 'normal', name: '普通', mul: 1.00, desc: '标准强度 · 推荐' },
-    { id: 'hard',   name: '困难', mul: 1.16, desc: '敌人整体强度 ×1.16 · 老兵挑战' }
+    { id: 'easy',   name: '轻松', mul: 0.86, aimMul: 1.35, reactMul: 1.22,
+      desc: '更慢更飘更迟钝 · 先摸清玩法' },
+    { id: 'normal', name: '普通', mul: 1.00, aimMul: 1.00, reactMul: 1.00,
+      desc: '标准强度 · 推荐' },
+    { id: 'hard',   name: '困难', mul: 1.16, aimMul: 0.76, reactMul: 0.82,
+      desc: '更快更准更机警 · 老兵挑战' }
   ];
   var diffIdx = 1;                   // 默认「普通」
 
@@ -1770,7 +1777,10 @@
   function initFoes(lvNo) {
     foes = [];
     var cfg = levelCfg(lvNo);
-    var dMul = DIFFS[clampDiff(diffIdx)].mul;
+    var dCur = DIFFS[clampDiff(diffIdx)];
+    var dMul = dCur.mul;
+    var dAim = dCur.aimMul;
+    var dReact = dCur.reactMul;
 
     // 出生点：玩家在左上，敌方优先占用右下、右上、左下
     var spots = [
@@ -1794,20 +1804,27 @@
       f.turnRate = 2.0 * cfg.turn;
       f.spread = cfg.spread;
       f.spreadArc = SPREAD_ARC;
-      f.aimScatter = cfg.jitter * AIM_SCATTER;   // 每发独立散布（玩家没有这个字段 → 不受影响）
+      f.aimScatter = cfg.jitter * AIM_SCATTER * dAim;   // 每发独立散布（玩家没有这个字段 → 不受影响）
       f.maxBullets = cfg.maxBullets * cfg.spread;
       f.bulletSpeedMul = cfg.bspd * Math.sqrt(dMul);
       f.bounceBonus = 0;
-      f.shieldMax = Math.round(cfg.shield * dMul);
+
+      // 耐久按「总耐久」分配，而不是血和盾各自取整 ——
+      // 否则 2 血 + 3 盾这类小数值会被 round() 抹平：
+      // 2×0.86→2、2×1.16→2，3×0.86→3、3×1.16→3，三档永远都是 5。
+      var baseTotal = cfg.hp + cfg.shield;
+      var totalEff = Math.max(1, Math.round(baseTotal * dMul));
+      var shieldShare = baseTotal > 0 ? Math.round(totalEff * (cfg.shield / baseTotal)) : 0;
+      f.shieldMax = shieldShare;
       f.shield = f.shieldMax;
-      f.maxHp = Math.max(1, Math.round(cfg.hp * dMul));
+      f.maxHp = Math.max(1, totalEff - shieldShare);
       f.hp = f.maxHp;
 
       // AI 行为参数（沿用原来的 cfg 字段名，便于 updateFoe 复用）
       f.cfg = {
         speedMul: cfg.spd,
         cdMul: cfg.cd,
-        reactMs: cfg.react,
+        reactMs: Math.round(cfg.react * dReact),
         aimJitter: cfg.jitter,
         leadMul: cfg.lead,
         maxBullets: cfg.maxBullets,
